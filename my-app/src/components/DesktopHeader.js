@@ -30,9 +30,9 @@ import { logout } from "@api/auth";
 const LinkItems = [
   { name: "Cameras", icon: BsCameraVideo, path: "/dashboard" },
   { name: "Multiple", icon: BsCollectionPlay, path: "/multiple" },
-  { name: "UserList", icon: MdOutlineManageAccounts, path: "/manageUser" },
   { name: "Dashboard", icon: MdOutlineDashboardCustomize, path: "/dashboard2" },
-  { name: "ManageCamera", icon: TbCameraCog, path: "/manageCamera" },
+  { name: "CameraList", icon: TbCameraCog, path: "/manageCamera" },
+  { name: "UserList", icon: MdOutlineManageAccounts, path: "/manageUser" },
   { name: "googlemap", icon: FiMapPin, path: "/googlemap" },
 ];
 
@@ -41,7 +41,7 @@ export default function Header() {
   const userDetailsString = localStorage.getItem("userDetails");
   const userDetails = JSON.parse(userDetailsString);
   const Loggeduserrole = userDetails.role;
-  const [hoveredItem, setHoveredItem] = useState(null);
+  const [isSidebarHovered, setIsSidebarHovered] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -123,14 +123,17 @@ export default function Header() {
 
     return (
       <Box
-        bg="gray.100"
+        // bg="gray.100"
         borderRight="1px"
         borderRightColor={useColorModeValue("gray.300", "gray.700")}
-        w={{ base: "full", md: hoveredItem ? "11rem" : "4.5rem" }}
+        w={{ base: "full", md: "4.5rem" }}
         pos="fixed"
         h="full"
-        paddingLeft={"20px"}
-        bgColor={"gray.200"}
+        paddingLeft={"5px"}
+        bgColor={"gray.100"}
+        boxShadow="5px 0 5px -5px gray" 
+        onMouseEnter={() => setIsSidebarHovered(true)}
+        onMouseLeave={() => setIsSidebarHovered(false)}
         {...rest}
       >
         {filteredLinkItems.map((link) => (
@@ -139,19 +142,16 @@ export default function Header() {
             name={link.name}
             path={link.path}
             icon={link.icon}
-            onMouseEnter={() => setHoveredItem(link.name)}
-            onMouseLeave={() => setHoveredItem(null)}
+            isSidebarHovered={isSidebarHovered}
           >
-            <Link style={{ textDecoration: "none" }} href={link.path}>
-              {link.name}
-            </Link>
+            {link.name}
           </NavItem>
         ))}
       </Box>
     );
   };
 
-  const NavItem = ({ icon, children, path, name, onMouseEnter, onMouseLeave, ...rest }) => {
+  const NavItem = ({ icon, children, path, name, isSidebarHovered, ...rest }) => {
     const router = useRouter();
     const isActive = router.pathname === path;
 
@@ -161,42 +161,48 @@ export default function Header() {
         href={path}
         style={{ textDecoration: "none" }}
         _focus={{ boxShadow: "none" }}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
+        {...rest}
       >
         <Flex
-          direction="row" // Set direction to row to place items horizontally
+          direction="column"
           align="center"
-          mt={3}
-          mb={3}
-          pt="2"
-          pb="2"
+          mt={2}
+          mb={1}
+          pt="1"
+          pb="1.5"
           mx="1.5"
           borderRadius="lg"
           role="group"
           cursor="pointer"
           _hover={{}}
           {...rest}
-          color={isActive ? "green.500" : "inherit"}
-          boxShadow={isActive ? "5px 0 5px -5px gray" : "none"} 
+          color={isActive ? "blue.600" : "inherit"}
+          bg={isActive ? "gray.100" : "transparent"}
+
+          // boxShadow={isActive ? "0.5px 0.5px 0.5px 0.5px gray" : "none"}
+          // boxShadow={isActive ? "5px 0 5px -5px gray" : "none"}
         >
           {icon && (
             <Icon
               fontSize="22"
+              fontWeight="bold"
               as={icon}
-              _groupHover={{ fontSize: "24" }}
-              color={isActive ? "green.500" : "inherit"}
+              color={isActive ? "blue.600" : "inherit"}
             />
           )}
-          {hoveredItem && (
+          {/* {isSidebarHovered && ( */}
             <Text
-              fontSize="14"
-              ml={4} 
-              display="inline" 
+              fontSize="10"
+              fontWeight="medium"
+              mt={1}
+              display="inline"
+              color={isSidebarHovered || isActive ? (isActive ? "blue.600" : "black") : "gray.200"}
+
             >
+
               {children}
             </Text>
-          )}
+          {/* )} */}
         </Flex>
       </Box>
     );
@@ -208,7 +214,7 @@ export default function Header() {
         bg={useColorModeValue("gray.100", "gray.900")}
         px={4}
         zIndex={9999}
-        boxShadow="lg" 
+        boxShadow="lg"
       >
         <Flex h={16} alignItems="center" justifyContent="space-between">
           <Box>
@@ -260,6 +266,7 @@ export default function Header() {
     </>
   );
 }
+
 
 
 // "use client";
