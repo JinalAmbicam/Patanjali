@@ -24,7 +24,7 @@
 //   </div>
 //       <div style={{ height: "70vh", width: "85%" ,marginLeft:"10%",marginTop:"3%"}}>
 //         <GoogleMapReact
-//           bootstrapURLKeys={{ key: "" }}
+//           bootstrapURLKeys={{ key: "AIzaSyBxN_aWFn40WT2b9-T25I-_OS9IEuXRnj0" }}
 //           defaultCenter={defaultProps.center}
 //           defaultZoom={defaultProps.zoom}
 //         >

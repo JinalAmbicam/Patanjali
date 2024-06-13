@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const baseURL = "http://192.168.1.26:3000/user"; // Base URL of your backend server
+const baseURL = "http://192.168.0.103:3000/user"; // Base URL of your backend server
 
 const instance = axios.create({
     baseURL: baseURL,

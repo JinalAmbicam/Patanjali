@@ -28,20 +28,23 @@ import { getAllLocations } from "./api/getAllLocations";
 import { updateCameraLocation } from "./api/updateCameraLocation";
 import { updateCameraZone } from "./api/updateCameraZone";
 import { updateCameraSubZone } from "./api/updateCameraSubZone";
+import { searchCamerasByLocation } from "./api/searchCamerasByLocation";
+import { searchCamerasByName } from "./api/searchCamerasByName";
 
 const manageCamera = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isDesktop] = useMediaQuery("(min-width: 1025px)");
   const [totalPages, setTotalPages] = useState(0);
-  const [cameras, setCameras] = useState([]);
+  const [cameras, setCameras] = useState([]); // Ensure cameras is always an array
   const [loading, setLoading] = useState(true);
   const [searchInput, setSearchInput] = useState("");
-  const [searchedUsers, setSearchedUsers] = useState([]);
+  const [searchedCameras, setSearchedCameras] = useState([]);
   const [locations, setLocations] = useState([]);
   const [zones, setZones] = useState([]);
   const [subZones, setSubZones] = useState([]);
   const [editingIndices, setEditingIndices] = useState([]);
   const [page, setPage] = useState(1);
+  const [selectedLocation, setSelectedLocation] = useState("");
 
   const toast = useToast();
   const showToast = (msg, status1) => {
@@ -71,21 +74,27 @@ const manageCamera = () => {
   useEffect(() => {
     fetchData();
     fetchLocations();
-  }, [page]);
+    // console.log("selectedLocation", selectedLocation);
+  }, [page, selectedLocation]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const userDetailsString = localStorage.getItem("userDetails");
-      if (!userDetailsString) {
-        throw new Error("User details not found in local storage");
+      let res;
+      if (selectedLocation) {
+        res = await searchCamerasByLocation(selectedLocation);
+        // console.log("Response: If", res);
+      } else {
+        const userDetailsString = localStorage.getItem("userDetails");
+        if (!userDetailsString) {
+          throw new Error("User details not found in local storage");
+        }
+        const userDetails = JSON.parse(userDetailsString);
+        const customerId = userDetails.customerid;
+        res = await getCameraInfo(customerId, page, itemsPerPage);
+
+        // console.log("Response Else:", res);
       }
-      const userDetails = JSON.parse(userDetailsString);
-      const customerId = userDetails.customerid;
-      let res = await getCameraInfo(customerId, page, itemsPerPage);
-
-      console.log("Response:", res);
-
       setTotalPages(res.totalPages);
       setCameras(res.cameras);
       setLoading(false);
@@ -109,13 +118,57 @@ const manageCamera = () => {
       setZones(locationsData.zones);
       setSubZones(locationsData.subZones);
       setLoading(false);
-      console.log("Locations Data", locationsData);
-      console.log("zone Data", locationsData.zones);
-      console.log("subzones Data", locationsData.subZones);
+      // console.log("Locations Data", locationsData);
+      // console.log("zone Data", locationsData.zones);
+      // console.log("subzones Data", locationsData.subZones);
     } catch (error) {
       console.error("Error fetching locations:", error);
       setLoading(false);
     }
+  };
+  const handleEnterKeyPress = (e) => {
+    if (e.key === "Enter") {
+      setCameras(searchedCameras);
+    }
+  };
+  // const handleButton = async () => {
+  //   try {
+  //     const resp = await searchCamerasByName(searchInput);
+  //     setSearchedCameras(resp.data);
+  //     setCameras(resp.data);
+  //     console.log("Searched Cameras: ",resp.data);
+  //     setTotalPages(Math.ceil(resp.data.length / itemsPerPage));
+  //   } catch (error) {
+  //     console.error("Error searching user:", error);
+  //   }
+  // };
+
+  const handleButton = async () => {
+    try {
+      const resp = await searchCamerasByName(searchInput);
+      console.log("API Response: ", resp);
+  
+      if (resp && resp.cameras) {
+        console.log("Searched Cameras: ", resp.cameras);
+        setSearchedCameras(resp.cameras);
+        setCameras(resp.cameras);
+        setTotalPages(Math.ceil(resp.totalItems / itemsPerPage));
+      } else {
+        console.error("Unexpected API Response Structure: ", resp);
+        setSearchedCameras([]);
+        setCameras([]);
+        setTotalPages(0);
+      }
+    } catch (error) {
+      console.error("Error searching user:", error);
+    }
+  };
+  
+  
+  
+
+  const handleSearch = async (e) => {
+    setSearchInput(e.target.value);
   };
 
   const toggleEditRoleDropdown = (index) => {
@@ -131,7 +184,7 @@ const manageCamera = () => {
     const selectedLocation = locations.find(
       (location) => location.location === event.target.value
     );
-  
+
     updatedCameras[index].location = event.target.value;
     setCameras(updatedCameras);
     try {
@@ -153,17 +206,20 @@ const manageCamera = () => {
       showToast(error.message, "error");
     }
   };
-  
+
   const handleZoneChange = async (event, index) => {
     const updatedCameras = [...cameras];
     const selectedZone = zones.find((zone) => zone.zone === event.target.value);
-  
+
     updatedCameras[index].zone = event.target.value;
     setCameras(updatedCameras);
-  
+
     try {
       if (selectedZone) {
-        await updateCameraZone(updatedCameras[index].cameraid, selectedZone._id);
+        await updateCameraZone(
+          updatedCameras[index].cameraid,
+          selectedZone._id
+        );
         fetchData();
         showToast("Zone Updated Successfully", "success");
         // Remove index from editingIndices after successful update
@@ -177,16 +233,16 @@ const manageCamera = () => {
       showToast(error.message, "error");
     }
   };
-  
+
   const handleSubZoneChange = async (event, index) => {
     const updatedCameras = [...cameras];
     const selectedSubZone = subZones.find(
       (subZone) => subZone.subZone === event.target.value
     );
-  
+
     updatedCameras[index].subZone = event.target.value;
     setCameras(updatedCameras);
-  
+
     try {
       if (selectedSubZone) {
         await updateCameraSubZone(
@@ -206,8 +262,13 @@ const manageCamera = () => {
       showToast(error.message, "error");
     }
   };
-  
-  
+
+  const handleLocationSelect = (event) => {
+    const Location = event.target.value;
+    setSelectedLocation(Location);
+    setSearchInput("");
+    setPage(1);
+  };
 
   const setNextPage = () => {
     const nextPage = page + 1;
@@ -232,10 +293,11 @@ const manageCamera = () => {
         flexDirection="column"
       >
         <Box display="flex" alignItems="center" marginBottom="1%">
-          <input
+        <input
             flex={2}
             type="text"
-            placeholder="Search Camera"
+            placeholder=" Search Camera"
+            onChange={handleSearch}
             value={searchInput}
             style={{
               border: "2px solid gray",
@@ -245,11 +307,32 @@ const manageCamera = () => {
               marginRight: "1%",
               paddingLeft: "1%",
             }}
-            onChange={(e) => setSearchInput(e.target.value)}
           />
-          <Button colorScheme="blue" size="md" borderRadius="5px" width={"6vw"}>
+          <Button
+            colorScheme="blue"
+            size="md"
+            onClick={handleButton}
+            borderRadius="5px"
+            width={"6vw"}
+          >
             Search
           </Button>
+          <Select
+            flex={1}
+            marginLeft="1rem"
+            onChange={handleLocationSelect}
+            value={selectedLocation}
+            style={{ marginLeft: "30vw", width: "10vw" }}
+          >
+            <option value="">All Location</option>
+            {locations &&
+              locations.length > 0 &&
+              locations.map((locationObj) => (
+                <option key={locationObj._id} value={locationObj.location}>
+                  {locationObj.location}
+                </option>
+              ))}
+          </Select>
         </Box>
 
         <Box flex="1" overflowY="auto">
@@ -269,7 +352,7 @@ const manageCamera = () => {
                 <Tr>
                   <Td colSpan={4}>Loading...</Td>
                 </Tr>
-              ) : (
+              ) : cameras && cameras.length > 0 ? (
                 cameras.map((camera, index) => (
                   <Tr key={index}>
                     {" "}
@@ -367,6 +450,10 @@ const manageCamera = () => {
                     </Td>
                   </Tr>
                 ))
+              ) : (
+                <Tr>
+                  <Td colSpan={4}>No cameras found</Td>
+                </Tr>
               )}
             </Tbody>
             <Tfoot>

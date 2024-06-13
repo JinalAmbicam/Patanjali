@@ -469,7 +469,7 @@ const CameraList = () => {
     setPlantext(planname);
     setisLive(islive);
     setVideoUrl(`https://${modifiedCameraUrl}${streamname}/${lastfilename}`);
-    console.log(videoUrl);
+    console.log("videoUrl",videoUrl);
     // alert(videoUrl)
     fetchRecordingDates(createdDate, plandays);
     setIsModalOpen(true);
