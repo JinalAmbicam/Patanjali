@@ -40,6 +40,7 @@ import {
 } from "@chakra-ui/react";
 import { useToast } from "@chakra-ui/react";
 import { getSharecameraname } from "./api/getSharecameraname";
+import { filterRoles } from "./api/filterRoles";
 
 const manageUser = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -83,7 +84,7 @@ const manageUser = () => {
       setIsMobile(window.innerWidth <= 480);
     };
 
-    handleResize(); // Initial check
+    handleResize(); 
     window.addEventListener("resize", handleResize);
 
     return () => {
@@ -100,14 +101,17 @@ const manageUser = () => {
     try {
       let res;
       if (selectedRole) {
-        res = await getAllUsers(
+        res = await filterRoles(
           page,
           itemsPerPage,
           selectedRole,
           +enterpriseId
         );
+        console.log("resss IF",res.data)
       } else {
         res = await getAllUsers(page, itemsPerPage, "", +enterpriseId);
+        console.log("resss ALL:",res.data)
+
       }
 
       const userData = res.data;
@@ -468,13 +472,15 @@ const manageUser = () => {
               width="100%"
               bottom="8vh"
             >
-              <Pagination
+              {totalPages>1 && (
+                <Pagination
                 page={page}
                 totalPages={totalPages}
                 setNextPage={setNextPage}
                 setPreviousPage={setPreviousPage}
                 setPage={setPage}
               />
+              )}
             </Box>
           )}
         </Box>

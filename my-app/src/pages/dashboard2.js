@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState,useRef, useEffect } from "react";
 import { useMediaQuery } from "@chakra-ui/react";
 import {
   Card,
@@ -55,6 +55,147 @@ const Dashboard2 = () => {
   const [selectedCamera, setSelectedCamera] = useState(null);
   const [isCameraFeedOpen, setIsCameraFeedOpen] = useState(false); // State to manage camera feed modal
   const [Locations, setLocations] = useState([]);
+  const [videoLoadError, setVideoLoadError] = useState(false);
+
+
+
+
+
+  const [modifiedCameraUrl, setModifiedCameraUrl] = useState("");
+  const [lastfilename, setLastfilename] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [islive, setisLive] = useState("");
+  const [streamid, setStreamid] = useState("");
+  const [cameraId, setCameraid] = useState("");
+  const [cameraname, setCameraname] = useState("");
+  const [planname, setPlanname] = useState(false);
+  const [cameraurl, setCameraurl] = useState("");
+  const [plantext, setPlantext] = useState("");
+  const [deviceId, setDeviceId] = useState("");
+
+  const handleVideoLoadError = (error) => {
+    setVideoLoadError(true);
+    setVideoLoadError(error);
+  };
+
+
+  const handleOpenModal = (
+    streamname,
+    createdDate,
+    plandays,
+    cameraId,
+    cameraname,
+    planname,
+    islive,
+    cameraurl,
+    deviceId
+  ) => {
+    function simplifyString(inputString) {
+      // Check if inputString is defined and is a string
+      if (typeof inputString !== 'string') {
+        return "";
+      }
+      // Remove non-alphanumeric characters and convert to lowercase
+      return inputString.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+    }
+        const newpname = simplifyString(planname);
+    
+    console.log(newpname); // Output the result
+    
+    // const modifiedCameraUrl = cameraurl.replace(':1938', ':443');
+
+    let modifiedCameraUrl = cameraurl;
+    let lastfilename = "index.m3u8";
+
+    // Check if the first segment is 'media5'
+    if (cameraurl.startsWith("media5")) {
+      modifiedCameraUrl = cameraurl.replace(":1938", ":443");
+      const currentDate = new Date();
+      const day = currentDate.getDate().toString().padStart(2, "0");
+      const month = (currentDate.getMonth() + 1).toString().padStart(2, "0"); // Note: Month is zero-indexed
+      const year = currentDate.getFullYear().toString().slice(-2);
+      const formattedDate = `${day}_${month}_${year}`;
+      lastfilename = `${formattedDate}/${streamname}.m3u8`;
+    } else if (cameraurl.startsWith("media11.ambicam.com")) {
+      modifiedCameraUrl = cameraurl.replace(":1938", ":443");
+      const currentDate = new Date();
+      const day = currentDate.getDate().toString().padStart(2, "0");
+      const month = (currentDate.getMonth() + 1).toString().padStart(2, "0"); // Note: Month is zero-indexed
+      const year = currentDate.getFullYear().toString().slice(-2);
+      const formattedDate = `${day}_${month}_${year}`;
+      lastfilename = `${formattedDate}/${streamname}.m3u8`;
+    } else if (cameraurl.startsWith("media1.ambicam.com")) {
+      modifiedCameraUrl = cameraurl.replace(":1938", ":443");
+      const currentDate = new Date();
+      const day = currentDate.getDate().toString().padStart(2, "0");
+      const month = (currentDate.getMonth() + 1).toString().padStart(2, "0"); // Note: Month is zero-indexed
+      const year = currentDate.getFullYear().toString().slice(-2);
+      const formattedDate = `${day}_${month}_${year}`;
+      lastfilename = `${formattedDate}/${streamname}_live.m3u8`;
+    } else if (cameraurl.startsWith("media12.ambicam.com")) {
+      modifiedCameraUrl = cameraurl.replace(
+        "media12.ambicam.com:1938",
+        "media1.ambicam.com:443"
+      );
+      const currentDate = new Date();
+      const day = currentDate.getDate().toString().padStart(2, "0");
+      const month = (currentDate.getMonth() + 1).toString().padStart(2, "0"); // Note: Month is zero-indexed
+      const year = currentDate.getFullYear().toString().slice(-2);
+      const formattedDate = `${day}_${month}_${year}`;
+      lastfilename = `${formattedDate}/${streamname}_live.m3u8`;
+    } else if (cameraurl.startsWith("media6.ambicam.com")) {
+      modifiedCameraUrl = cameraurl.replace(
+        "media6.ambicam.com:1938",
+        "media1.ambicam.com:443"
+      );
+      const currentDate = new Date();
+      const day = currentDate.getDate().toString().padStart(2, "0");
+      const month = (currentDate.getMonth() + 1).toString().padStart(2, "0"); // Note: Month is zero-indexed
+      const year = currentDate.getFullYear().toString().slice(-2);
+      const formattedDate = `${day}_${month}_${year}`;
+      lastfilename = `${formattedDate}/${streamname}_live.m3u8`;
+    } else {
+      modifiedCameraUrl = cameraurl.replace(":1938", ":443");
+      // Change lastfilename to 'cameraid.m3u8'
+      lastfilename = `index.m3u8`;
+    }
+    setModifiedCameraUrl(modifiedCameraUrl);
+    setLastfilename(lastfilename);
+    setCameraurl(cameraurl);
+    setPlanname(newpname);
+    setPlantext(planname);
+    setisLive(islive);
+    setVideoUrl(`https://${modifiedCameraUrl}${streamname}/${lastfilename}`);
+    console.log("videoUrl:  ",`https://${modifiedCameraUrl}${streamname}/${lastfilename}`);
+    setIsModalOpen(true);
+    setStreamid(streamname);
+    setCameraid(cameraId);
+    setCameraname(cameraname);
+    setDeviceId(deviceId);
+    // console.log(cameraId)
+  };
+  const jumptoLive = () => {
+    // Assuming you have the live URL for your video.
+    const liveUrl = `https://${modifiedCameraUrl}${streamid}/${lastfilename}`;
+    setVideoUrl(liveUrl);
+    // setSelectedDate(false);
+  };
+
+  const liveFeedRef = useRef();
+
+  const handleCloseModal = () => {
+    // setSelectedDate(null);
+    setIsModalOpen(false);
+    // setStartDateTime("");
+    // setEndDateTime("");
+    setVideoLoadError(false);
+    // Call the destroyVideoPlayer function in the LiveFeed component
+    if (liveFeedRef.current) {
+      liveFeedRef.current.destroyVideoPlayer();
+    }
+  };
+
+
 
   useEffect(() => {
     fetchLocation();
@@ -92,20 +233,28 @@ const Dashboard2 = () => {
     setIsModalOpen(true);
   };
 
+  // const fetchData = async (locationName) => {
+  //   try {
+  //     console.log("locationName", locationName);
+  //     let res = await searchCamerasByLocation(locationName);
+  //     setCameras(res.cameras);
+  //     console.log("res.cameras:   ", res.cameras);
+  //   } catch (error) {
+  //     console.error("Error fetching camera info:", error);
+  //   }
+  // };
   const fetchData = async (locationName) => {
     try {
       console.log("locationName", locationName);
       let res = await searchCamerasByLocation(locationName);
-      setCameras(res.cameras);
-      console.log("res.cameras:   ", res.cameras);
+      setCameras(res.cameralists);
+      console.log("res.camerasList:   ", res.cameralists);
     } catch (error) {
       console.error("Error fetching camera info:", error);
     }
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
+  
 
   const handleCameraClick = (camera) => {
     setSelectedCamera(camera);
@@ -352,11 +501,27 @@ const Dashboard2 = () => {
           <ModalHeader>{selectedLocation}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <div className="cameras-list">
+            <div
+              className="cameras-list"
+              style={{ maxHeight: "250px", overflowY: "scroll" }}
+            >
               {sortedCameras.map((camera) => (
                 <Button
                   key={camera.id}
-                  onClick={() => handleCameraClick(camera)}
+                  onClick={() =>
+                    handleOpenModal(
+                      camera.streamname,
+                      camera.createdDate,
+                      camera.plandays,
+                      camera.cameraid,
+                      camera.cameraname,
+                      camera.planname,
+                      camera.islive,
+                      camera.cameraurl,
+                      camera.deviceid
+                    )
+                  }
+                  // onClick={() => handleCameraClick(camera)}
                   width="100%"
                   height="50px"
                   marginBottom="10px"
@@ -384,15 +549,26 @@ const Dashboard2 = () => {
           <ModalCloseButton />
           <ModalBody>
             {selectedCamera && (
+              // <LiveFeed
+              //   showTimeline={false}
+              //   live={true}
+              //   selectedDate={new Date()}
+              //   handleThumbnailGenerated={() => {}}
+              //   cameraId={selectedCamera.id}
+              //   isLive={true}
+              //   recordingDates={[]}
+              //   onVideoLoadError={() => {}}
+              // />
               <LiveFeed
-                showTimeline={false} 
-                live={true} 
-                selectedDate={new Date()} 
-                handleThumbnailGenerated={() => {}} 
-                cameraId={selectedCamera.id}
-                isLive={true} 
-                recordingDates={[]} 
-                onVideoLoadError={() => {}} 
+                // http://media1.ambicam.com:8080/dvr30/8b522279-587d-4079-8408-3aa42c1ea751/26-07-2023.m3u8
+                live={`${videoUrl}`}
+                autoPlay={true}
+                ref={liveFeedRef}
+                selectedDate={`${videoUrl}`}
+                handleThumbnailGenerated={handleThumbnailGenerated}
+                cameraId={cameraId}
+                isLive={islive}
+                onVideoLoadError={handleVideoLoadError}
               />
             )}
           </ModalBody>

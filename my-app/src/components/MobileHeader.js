@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Flex,
@@ -26,30 +26,44 @@ import {
   DrawerOverlay,
   useDisclosure,
   HStack,
-  Link,Badge,Stack
-} from '@chakra-ui/react';
-import { useState ,useEffect} from 'react';
-import { useRouter } from 'next/router';
-import { FiMenu, FiSettings, FiBell, FiX, FiHome, FiUser } from 'react-icons/fi';
-import { GrMultiple } from 'react-icons/gr';
-import NotificationDialog from '@component/NotificationDialog';
-import amb from '@img/amb.png'
-import Image from 'next/image';
-import {logout} from '@api/auth'
-import ptnlogo from '@img/PatanjaliLogo.png'
-
+  Link,
+  Badge,
+  Stack,
+} from "@chakra-ui/react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import {
+  FiMenu,
+  FiSettings,
+  FiBell,
+  FiX,
+  FiHome,
+  FiUser,
+} from "react-icons/fi";
+import { GrMultiple } from "react-icons/gr";
+import NotificationDialog from "@component/NotificationDialog";
+import amb from "@img/amb.png";
+import Image from "next/image";
+import { logout } from "@api/auth";
+import ptnlogo from "@img/PatanjaliLogo.png";
+import { FiChevronDown, FiMapPin } from "react-icons/fi";
+import {
+  MdOutlineManageAccounts,
+  MdOutlineDashboardCustomize,
+} from "react-icons/md";
+import { TbCameraCog } from "react-icons/tb";
 
 const MobileHeader = () => {
   const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
 
   useEffect(() => {
     // Retrieve user details from local storage
-    const userDetails = JSON.parse(localStorage.getItem('userDetails'));
+    const userDetails = JSON.parse(localStorage.getItem("userDetails"));
     if (userDetails) {
-      console.log(userDetails)
+      console.log(userDetails);
       // alert(userDetails.langflag)
       setEmail(userDetails.email);
     }
@@ -57,25 +71,27 @@ const MobileHeader = () => {
     // const initialCount = 1;
     // setNotifications([staticMessage]);
     // setNotificationCount(initialCount);
-    
-    const socket = new WebSocket('wss://octopus-app-gl75w.ondigitalocean.app:8080'); // Replace with your WebSocket server URL
+
+    const socket = new WebSocket(
+      "wss://octopus-app-gl75w.ondigitalocean.app:8080"
+    ); // Replace with your WebSocket server URL
 
     // WebSocket event handlers
-    socket.addEventListener('open', (event) => {
-      console.log('WebSocket connection opened:', event);
+    socket.addEventListener("open", (event) => {
+      console.log("WebSocket connection opened:", event);
     });
-     // Assuming you're handling incoming messages like this
-     socket.addEventListener('message', (event) => {
-       const notification = event.data;
-       handleIncomingNotification(notification);
-       setNotificationCount((prevCount) => prevCount + 1);
-       // console.log('WebSocket message received:', event.data);
-     });
- 
-    socket.addEventListener('close', (event) => {
-      console.log('WebSocket connection closed:', event);
+    // Assuming you're handling incoming messages like this
+    socket.addEventListener("message", (event) => {
+      const notification = event.data;
+      handleIncomingNotification(notification);
+      setNotificationCount((prevCount) => prevCount + 1);
+      // console.log('WebSocket message received:', event.data);
     });
- 
+
+    socket.addEventListener("close", (event) => {
+      console.log("WebSocket connection closed:", event);
+    });
+
     // Clean up the WebSocket connection when the component unmounts
     return () => {
       socket.close();
@@ -88,10 +104,10 @@ const MobileHeader = () => {
     };
 
     handleResize(); // Initial check
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
 
@@ -100,83 +116,122 @@ const MobileHeader = () => {
     try {
       // Call the logout API
       const logoutResult = await logout();
-  
+
       if (logoutResult.success) {
         // Remove any items from local storage or perform any other necessary cleanup
-        localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('token');
-        console.log('logout',logoutResult)
+        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("token");
+        console.log("logout", logoutResult);
         // Redirect to the homepage after logout
-        router.push('/');
+        router.push("/");
       } else {
         // Handle logout error
         // You can display a message or take appropriate action
-        console.error('Logout error:', logoutResult.message);
+        console.error("Logout error:", logoutResult.message);
       }
     } catch (error) {
       // Handle unexpected errors, e.g., network issues
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     }
-
   };
   const bottomNavItems = [
-    { label: 'Home', icon: <FiHome />, onClick: () => router.push('/dashboard') },
-    { label: 'Multiple', icon: <GrMultiple />, onClick: () => router.push('/multiple') },
-    { label: 'Settings', icon: <FiSettings />, onClick: () => router.push('/dashboard') },
-    { label: 'Profile', icon: <FiUser />, onClick: () => router.push('/profile') },
-    
+    {
+      label: "Home",
+      icon: <FiHome />,
+      onClick: () => router.push("/dashboard"),
+    },
+    {
+      label: "Multiple",
+      icon: <GrMultiple />,
+      onClick: () => router.push("/multiple"),
+    },
+    {
+      name: "Dashboard",
+      icon: <MdOutlineDashboardCustomize />,
+      onClick: () => router.push("/dashboard2"),
+    },
+    {
+      name: "CameraList",
+      icon: <TbCameraCog />,
+      onClick: () => router.push("/manageCamera"),
+    },
+    {
+      name: "UserList",
+      icon: <MdOutlineManageAccounts />,
+      onClick: () => router.push("/manageUser"),
+    },
+  
     // Add more navigation items as needed
   ];
 
-
   const Sidebar = () => (
-    <Drawer 
-      placement={isMobile ? 'left' : 'left-start'}
+    <Drawer
+      placement={isMobile ? "left" : "left-start"}
       onClose={onClose}
       isOpen={isMobile ? isOpen : true}
     >
       <DrawerOverlay />
       <DrawerContent>
         <DrawerHeader margin={4} borderBottomWidth="1px">
-        <Flex justify="space-between" align="center">
-            <Box >
-                <Flex direction="row" align="center">
-               
+          <Flex justify="space-between" align="center">
+            <Box>
+              <Flex direction="row" align="center">
                 <Avatar name={email} bg="blue.200" size="sm">
-                    <AvatarBadge boxSize="1.2em" bg="blue.200" />
+                  <AvatarBadge boxSize="1.2em" bg="blue.200" />
                 </Avatar>
-                <Text ml={2} fontWeight="bold">{email.split('@')[0]}</Text>
-                </Flex>
+                <Text ml={2} fontWeight="bold">
+                  {email.split("@")[0]}
+                </Text>
+              </Flex>
             </Box>
             <IconButton
-                icon={<FiX />}
-                aria-label="Close"
-                variant="ghost"
-                colorScheme="blue"
-                onClick={onClose}
+              icon={<FiX />}
+              aria-label="Close"
+              variant="ghost"
+              colorScheme="blue"
+              onClick={onClose}
             />
-            </Flex>
+          </Flex>
         </DrawerHeader>
         <DrawerBody>
           <VStack spacing={4} align="start">
-
-            <Button colorScheme="blue" variant="ghost" width="full" onClick={()=>router.push('/dashboard')}>
+            <Button
+              colorScheme="blue"
+              variant="ghost"
+              width="full"
+              onClick={() => router.push("/dashboard")}
+            >
               Home
             </Button>
-            <Button colorScheme="blue" variant="ghost" width="full" onClick={()=>router.push('/profile')}>
+            <Button
+              colorScheme="blue"
+              variant="ghost"
+              width="full"
+              onClick={() => router.push("/profile")}
+            >
               Profile
             </Button>
-            <Button colorScheme="blue" variant="ghost" width="full" >
+            <Button colorScheme="blue" variant="ghost" width="full">
               Cameras
             </Button>
-            
-            <Button colorScheme="blue" variant="ghost" width="full" onClick={()=>router.push('/multiple')}>
+
+            <Button
+              colorScheme="blue"
+              variant="ghost"
+              width="full"
+              onClick={() => router.push("/multiple")}
+            >
               Multiple Screen
             </Button>
-            <Button colorScheme="blue" variant="ghost" width="full" >
+            <Button colorScheme="blue" variant="ghost" width="full">
               Settings
             </Button>
-            <Button colorScheme="blue" variant="ghost" width="full" onClick={handleLogout}>
+            <Button
+              colorScheme="blue"
+              variant="ghost"
+              width="full"
+              onClick={handleLogout}
+            >
               Logout
             </Button>
           </VStack>
@@ -185,49 +240,70 @@ const MobileHeader = () => {
     </Drawer>
   );
 
-const [isNotificationOpen, setNotificationOpen] = useState(false);
-const [notificationCount, setNotificationCount] = useState(0);
+  const [isNotificationOpen, setNotificationOpen] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
 
+  const handleNotificationOpen = () => {
+    // Increase the notification count and open the dialog
+    // setNotificationCount(prevCount => prevCount + 1);
+    setNotificationOpen(true);
+  };
 
-const handleNotificationOpen = () => {
-  // Increase the notification count and open the dialog
-  // setNotificationCount(prevCount => prevCount + 1);
-  setNotificationOpen(true);
-};
+  const handleNotificationClose = () => {
+    // Close the dialog
+    setNotificationOpen(false);
+  };
 
-const handleNotificationClose = () => {
-  // Close the dialog
-  setNotificationOpen(false);
-};
+  const handleMarkAsRead = () => {
+    // Reset the notification count
+    setNotificationCount(0);
+    handleNotificationClose();
+  };
 
-const handleMarkAsRead = () => {
-  // Reset the notification count
-  setNotificationCount(0);
-  handleNotificationClose();
-};
+  const [notifications, setNotifications] = useState([]);
 
-const [notifications, setNotifications] = useState([]);
-  
-// Function to handle incoming notifications from the WebSocket server
-const handleIncomingNotification = (notification) => {
-  setNotifications((prevNotifications) => [...prevNotifications, notification]);
-};
+  // Function to handle incoming notifications from the WebSocket server
+  const handleIncomingNotification = (notification) => {
+    setNotifications((prevNotifications) => [
+      ...prevNotifications,
+      notification,
+    ]);
+  };
 
-  return (<Box bg="gray.100" position="fixed" bottom={0}  left={0} right={0} zIndex={10}>
-    {/* <Sidebar  /> */}
-    <Flex p={4} bg="gray.100" align="center"  position="fixed" top={0} width={'100%'}>
-    {/* <IconButton
+  return (
+    <Box
+      bg="gray.100"
+      position="fixed"
+      bottom={0}
+      left={0}
+      right={0}
+      zIndex={10}
+    >
+      {/* <Sidebar  /> */}
+      <Flex
+        p={4}
+        bg="gray.100"
+        align="center"
+        position="fixed"
+        top={0}
+        width={"100%"}
+      >
+        {/* <IconButton
       icon={<FiMenu />}
       aria-label="Menu"
       variant="ghost"
       colorScheme="blue"
       onClick={onOpen}
     /> */}
-    {/* <Image height={40} width={40} src={amb}></Image> */}
-    <Spacer/>
-    <Spacer/>
-    <Image style={{width:"40%",marginTop:"2%",marginRight:"40%"}} src={ptnlogo} alt='Patanjali logo' />
-    {/* <Box position="relative" display="inline-block">
+        {/* <Image height={40} width={40} src={amb}></Image> */}
+        <Spacer />
+        <Spacer />
+        <Image
+          style={{ width: "40%", marginTop: "2%", marginRight: "40%" }}
+          src={ptnlogo}
+          alt="Patanjali logo"
+        />
+        {/* <Box position="relative" display="inline-block">
         <Badge
           colorScheme="blue"
           borderRadius="full"
@@ -250,36 +326,39 @@ const handleIncomingNotification = (notification) => {
           <FiBell />
         </IconButton>
       </Box> */}
-      
-      {/* Notification Dialog */}
-      {/* <NotificationDialog
+
+        {/* Notification Dialog */}
+        {/* <NotificationDialog
         isOpen={isNotificationOpen}
         onClose={handleNotificationClose}
         notificationCount={notificationCount}
         onMarkAsRead={handleMarkAsRead}
         notifications={notifications}
       /> */}
-      <Spacer></Spacer>
-      <Box ml={"20px"} onClick={() => router.push("/profile")}>
+        <Spacer></Spacer>
+        <Box ml={"20px"} onClick={() => router.push("/profile")}>
           <Stack direction="row">
-            <Avatar name={email} bg="green.300" size="sm" />
+            <Avatar name={email} bg="red.300" size="sm" />
           </Stack>
         </Box>
-  </Flex>
-  {/* Bottom Navigation Bar */}
-  {isMobile && (
-        <Flex bg="grey.300" style={{boxShadow:"2px 20px 10px 14px"}} p={3.5} justify="space-around" align="center">
+      </Flex>
+      {/* Bottom Navigation Bar */}
+      {isMobile && (
+        <Flex
+          bg="grey.300"
+          style={{ boxShadow: "2px 20px 10px 14px" }}
+          p={3.5}
+          justify="space-around"
+          align="center"
+        >
           {bottomNavItems.map((item, index) => (
             <Box key={index} textAlign="center" onClick={item.onClick}>
-              <div style={{marginLeft:"25%"}}>{item.icon}</div>
-             
+              <div style={{ marginLeft: "25%" }}>{item.icon}</div>
             </Box>
           ))}
         </Flex>
       )}
-  
-  
-  </Box>
+    </Box>
   );
 };
 

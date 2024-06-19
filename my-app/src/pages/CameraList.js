@@ -469,7 +469,10 @@ const CameraList = () => {
     setPlantext(planname);
     setisLive(islive);
     setVideoUrl(`https://${modifiedCameraUrl}${streamname}/${lastfilename}`);
-    console.log("videoUrl",videoUrl);
+    console.log(
+      "videoUrl:  ",
+      `https://${modifiedCameraUrl}${streamname}/${lastfilename}`
+    );
     // alert(videoUrl)
     fetchRecordingDates(createdDate, plandays);
     setIsModalOpen(true);
@@ -961,11 +964,602 @@ const CameraList = () => {
           style={{ boxShadow: "0 0 5px rgba(0, 0, 0, 0.2)" }}
         >
           <Spacer />
+          {isMobile && (
+            <Tabs variant="soft-rounded" colorScheme="green">
+              <TabList
+                mb="1"
+                style={{
+                  boxShadow: "0 0 5px rgba(0, 0, 0, 0.2)",
+                  border: "1px solid green",
+                  borderRadius: "20px",
+                  width: "263px",
+                  fontSize: "10px",
+                  marginLeft: "40px",
+                  flexDirection: "row",
+                  marginBottom: "15px",
+                }}
+              >
+                <Tab
+                  style={{ textAlign: "left" }}
+                  _selected={{
+                    bg: selectedTab === "myCameras" ? "green.300" : "white",
+                    color: selectedTab == "myCameras" ? "white" : "green.300",
+                  }}
+                  _focus={{ outline: "none" }}
+                  onClick={() => {
+                    setTabOpen(false);
+                    setSelectedTab("myCameras");
+                  }}
+                >
+                  {/* <Icon
+                              as={BiCamera}
+                              boxSize={5}
+                              color="gray.500"
+                              mr={2}
+                              mt={1}
+                            /> */}
+                  MyCameras
+                </Tab>
+                <Tab
+                  style={{ textAlign: "left" }}
+                  _selected={{
+                    bg: selectedTab === "sharedCameras" ? "green.300" : "white",
+                    color: selectedTab == "sharedCameras" ? "white" : "green.300",
+                  }}
+                  _focus={{ outline: "none" }}
+                  onClick={() => {
+                    handleSharedTab();
+                    setSelectedTab("sharedCameras");
+                  }}
+                >
+                  {/* <Icon
+                              as={FaUsers}
+                              boxSize={5}
+                              color="gray.500"
+                              mr={2}
+                              mt={1}
+                            /> */}
+                  SharedCameras
+                </Tab>
+              </TabList>
+              <TabPanels>
+                {/* My Cameras Panel */}
+                <PullToRefresh onRefresh={handleRefresh}>
+                  <TabPanel p={0}>
+                    {isLoading ? (
+                      <Flex align="center" justify="center" height="720">
+                        <Spinner
+                          size="xl"
+                          thickness="4px"
+                          color="blue.500"
+                          emptyColor="gray.200"
+                        />{" "}
+                      </Flex>
+                    ) : (
+                      <Box
+                        onScroll={handleScroll}
+                        maxH={
+                          isMobile
+                            ? "calc(100vh - 170px)"
+                            : "calc(100vh - 190px)"
+                        }
+                        overflowY="auto"
+                        css={{
+                          "&::-webkit-scrollbar": {
+                            width: "0.2em",
+                          },
+                          "&::-webkit-scrollbar-track": {
+                            background: "transparent",
+                          },
+                          "&::-webkit-scrollbar-thumb": {
+                            background: "#888",
+                          },
+                          overflowX: "hidden", // Hide horizontal scrollbar
+                          scrollbarWidth: "thin", // For Firefox
+                          scrollbarColor: "#888 transparent", // For Firefox
+                          ":active": {
+                            overflowY: "scroll", // Show scrollbar while touched
+                          },
+                        }}
+                      >
+                        {cameraList.length === 0 ? (
+                          <Flex
+                            alignItems="center"
+                            justifyContent="center"
+                            height="100%"
+                          >
+                            <Box
+                              p={6}
+                              borderWidth={1}
+                              borderRadius="lg"
+                              borderColor="gray.300"
+                              boxShadow="md"
+                              bg="white"
+                            >
+                              <Flex
+                                direction="column"
+                                alignItems="center"
+                                color="gray.500"
+                              >
+                                <Icon
+                                  as={FaVideoSlash}
+                                  boxSize={20}
+                                  color="red.300"
+                                />
+                                <Text fontSize="xl" mt={4} fontWeight="bold">
+                                  Oops! No cameras found.
+                                </Text>
+                                <Text fontSize="md" mt={2} textAlign="center">
+                                  Looks like you haven't added any cameras yet.
+                                  Start by adding a camera to your list.
+                                </Text>
+                                {/* <Button
+                                colorScheme="blue"
+                                mt={4}
+                                size="sm"
+                                onClick={() => setIsAddCameraModalOpen(true)}
+                              >
+                                Add Camera
+                              </Button> */}
+                              </Flex>
+                            </Box>
+                          </Flex>
+                        ) : (
+                          <Grid
+                            templateColumns="repeat(auto-fill, minmax(280px, 1fr))"
+                            gap={4}
+                          >
+                            {sortedCameraList.map((camera) => (
+                              <GridItem
+                                key={camera.cameraid}
+                                width={window.innerWidth <= 280 ? "280px" : ""}
+                              >
+                                <Box
+                                  bg="transparent"
+                                  borderRadius="2xl"
+                                  p={1}
+                                  mb={2}
+                                  boxShadow="xl"
+                                  transition="transform 0.3s, box-shadow 0.3s"
+                                  _hover={{
+                                    transform: "scale(1.03)",
+                                    boxShadow: "0px 0px 7px rgba(0, 0, 0, 0.3)",
+                                  }}
+                                >
+                                  <Box position="relative" cursor="pointer">
+                                    <Image
+                                      src={
+                                        localStorage.getItem(
+                                          `thumbnail_${camera.cameraid}`
+                                        ) ||
+                                        camera.thumbnailUrl ||
+                                        "https://via.placeholder.com/600x342/000000/?text="
+                                      } // Use stored thumbnail URL or camera.thumbnailUrl
+                                      onClick={() =>
+                                        handleOpenModal(
+                                          camera.streamname,
+                                          camera.createdDate,
+                                          camera.plandays,
+                                          camera.cameraid,
+                                          camera.cameraname,
+                                          camera.planname,
+                                          camera.islive,
+                                          camera.cameraurl,
+                                          camera.deviceid
+                                        )
+                                      }
+                                      alt="Camera"
+                                      size={modalSize}
+                                      height={imageHeight}
+                                    />
+
+                                    {/* <Text
+                                    onClick={() =>
+                                      handleOpenModal(
+                                        camera.streamname,
+                                        camera.createdDate,
+                                        camera.plandays,
+                                        camera.cameraid,
+                                        camera.cameraname,
+                                        camera.planname,
+                                        camera.islive,
+                                        camera.cameraurl,
+                                        camera.deviceid
+                                      )
+                                    }
+                                    position="absolute"
+                                    top="50%" // Center vertically
+                                    left="50%" // Center horizontally
+                                    fontSize={25}
+                                    transform="translate(-50%, -50%)" // Move the text to center based on its size
+                                  >
+                                    ▶
+                                  </Text> */}
+                                    <IoIosPlayCircle
+                                      onClick={() =>
+                                        handleOpenModal(
+                                          camera.streamname,
+                                          camera.createdDate,
+                                          camera.plandays,
+                                          camera.cameraid,
+                                          camera.cameraname,
+                                          camera.planname,
+                                          camera.islive,
+                                          camera.cameraurl,
+                                          camera.deviceid
+                                        )
+                                      }
+                                      style={{
+                                        position: "absolute",
+                                        top: "50%",
+                                        left: "50%",
+                                        transform: "translate(-50%, -50%)",
+                                        fontSize: "34px",
+                                        color: "white",
+                                      }}
+                                    />
+                                    {/* <FaPlay 
+                                    onClick={() =>
+                                      handleOpenModal(
+                                        camera.streamname,
+                                        camera.createdDate,
+                                        camera.plandays,
+                                        camera.cameraid,
+                                        camera.cameraname,
+                                        camera.planname,
+                                        camera.islive,
+                                        camera.cameraurl,
+                                        camera.deviceid
+                                      )
+                                    }
+                                    style={{
+                                      position: "absolute",
+                                      top: "50%",
+                                      left: "50%",
+                                      transform: "translate(-50%, -50%)",
+                                      fontSize: "20px",
+                                      color:"white"
+                                    }}
+                                  /> */}
+                                    {/* //MainContent */}
+                                    {camera.islive ? (
+                                      <Badge
+                                        position="absolute" // Position the badge absolutely within the container
+                                        top={2} // Top position from the edge of the container
+                                        right={2} // Right position from the edge of the container
+                                        fontSize="sm"
+                                        color="green" // You can adjust the color scheme of the badge
+                                        background={"whiteAlpha.800"}
+                                        borderRadius={"15%"}
+                                      >
+                                        On
+                                      </Badge>
+                                    ) : (
+                                      <Badge
+                                        position="absolute" // Position the badge absolutely within the container
+                                        top={2} // Top position from the edge of the container
+                                        right={2} // Right position from the edge of the container
+                                        fontSize="sm"
+                                        color="red"
+                                        background={"whiteAlpha.800"}
+                                        borderRadius={"15%"}
+                                        // colorScheme="red" // Set color to red when camera is off
+                                      >
+                                        Off
+                                      </Badge>
+                                    )}
+                                  </Box>
+
+                                  <HStack
+                                    justifyContent="space-between"
+                                    alignItems="center"
+                                  >
+                                    <Text fontWeight="bold" fontSize="sm" p={1}>
+                                      {camera.cameraname}{" "}
+                                      <span
+                                        style={{
+                                          fontSize: "11px",
+                                          fontWeight: "500",
+                                        }}
+                                      >
+                                        ({camera.deviceid})
+                                      </span>
+                                    </Text>
+
+                                    {/* Add the Menu component with option dots */}
+                                    <Menu
+                                      placement="top"
+                                      style={{
+                                        position: "absolute",
+                                        zIndex: 999,
+                                      }}
+                                    >
+                                      <MenuButton
+                                        as={IconButton}
+                                        icon={<FiMoreVertical />}
+                                        variant="ghost"
+                                      />
+                                      <MenuList>
+                                        <MenuItem
+                                          onClick={() =>
+                                            handleShareCameraModel(
+                                              camera.cameraname,
+                                              camera.cameraid
+                                            )
+                                          }
+                                          icon={<FiShare />}
+                                        >
+                                          Share This Camera
+                                        </MenuItem>
+                                        <MenuItem
+                                          onClick={() =>
+                                            handleDeleteCamera(camera.cameraid)
+                                          }
+                                          icon={<FiTrash2 />}
+                                        >
+                                          Remove Camera
+                                        </MenuItem>
+                                        {/* Add more menu items as needed */}
+                                      </MenuList>
+                                    </Menu>
+                                  </HStack>
+                                </Box>
+                              </GridItem>
+                            ))}
+                          </Grid>
+                        )}
+
+                        {isload && (
+                          <>
+                            <Flex align="center" justify="center" height="100%">
+                              <Spinner
+                                size="md"
+                                thickness="3px"
+                                color="blue.500"
+                                emptyColor="gray.200"
+                              />
+                            </Flex>
+                          </>
+                        )}
+                        {cameraList.length === totalitem && (
+                          <>
+                            <Text
+                              align="center"
+                              justify="center"
+                              size="sm"
+                              mt={4}
+                            >
+                              You Have Reached At End Of Your Camera List
+                            </Text>
+                          </>
+                        )}
+                      </Box>
+                    )}
+                  </TabPanel>
+                </PullToRefresh>
+
+                {/* Shared Cameras Panel */}
+                <TabPanel>
+                  {isLoading ? (
+                    <Flex align="center" justify="center" maxHeight={"1000px"}>
+                      <Spinner
+                        size="xl"
+                        thickness="4px"
+                        color="blue.500"
+                        emptyColor="gray.200"
+                      />{" "}
+                    </Flex>
+                  ) : (
+                    <>
+                      {shareCameraList.length === 0 ? (
+                        <Flex
+                          alignItems="center"
+                          justifyContent="center"
+                          height="100vh" // Make the container fill the full viewport height
+                        >
+                          <Box
+                            p={6}
+                            borderWidth={1}
+                            borderRadius="lg"
+                            borderColor="gray.300"
+                            boxShadow="md"
+                            bg="white"
+                            textAlign="center" // Center the text
+                          >
+                            <Icon
+                              as={FaVideoSlash}
+                              boxSize={20}
+                              color="red.300"
+                            />
+                            <Text fontSize="xl" mt={4} fontWeight="bold">
+                              Oh no! No shared cameras found.
+                            </Text>
+                            <Text fontSize="md" mt={2}>
+                              It looks like you haven't been granted access to
+                              any shared cameras yet.
+                            </Text>
+                          </Box>
+                        </Flex>
+                      ) : (
+                        <PullToRefresh onRefresh={handleRefresh}>
+                          <Box
+                            maxH="calc(100vh - 250px)"
+                            overflowY="auto"
+                            css={{
+                              "&::-webkit-scrollbar": {
+                                width: "0.2em",
+                              },
+                              "&::-webkit-scrollbar-track": {
+                                background: "transparent",
+                              },
+                              "&::-webkit-scrollbar-thumb": {
+                                background: "#888",
+                              },
+                              overflowX: "hidden", // Hide horizontal scrollbar
+                              scrollbarWidth: "thin", // For Firefox
+                              scrollbarColor: "#888 transparent", // For Firefox
+                              ":active": {
+                                overflowY: "scroll", // Show scrollbar while touched
+                              },
+                            }}
+                          >
+                            <Grid
+                              templateColumns="repeat(auto-fill, minmax(280px, 1fr))"
+                              gap={4}
+                            >
+                              {shareCameraList.map((camera) => (
+                                <GridItem
+                                  key={camera.cameraid}
+                                  width={
+                                    window.innerWidth <= 280 ? "280px" : ""
+                                  }
+                                >
+                                  <Box
+                                    bg="white"
+                                    borderRadius="md"
+                                    p={1}
+                                    mb={2}
+                                    boxShadow="md"
+                                    transition="transform 0.3s, box-shadow 0.3s" // Add transition effects
+                                    _hover={{
+                                      transform: "scale(1.03)", // Scale up on hover
+                                      boxShadow:
+                                        "0px 0px 7px rgba(0, 0, 0, 0.3)", // Add a shadow on hover
+                                    }}
+                                  >
+                                    <Box position="relative" cursor="pointer">
+                                      <Image
+                                        src={
+                                          localStorage.getItem(
+                                            `thumbnail_${camera.cameraid}`
+                                          ) ||
+                                          camera.thumbnailUrl ||
+                                          "https://via.placeholder.com/600x342/000000/?text="
+                                        } // Use stored thumbnail URL or camera.thumbnailUrl
+                                        onClick={() =>
+                                          handleOpenModal(
+                                            camera.streamname,
+                                            camera.createdDate,
+                                            camera.plandays,
+                                            camera.cameraid,
+                                            camera.cameraname,
+                                            camera.planname,
+                                            camera.islive,
+                                            camera.cameraurl,
+                                            camera.deviceid
+                                          )
+                                        }
+                                        alt="Camera"
+                                        size={modalSize}
+                                        height={imageHeight}
+                                      />
+
+                                      <Text
+                                        position="absolute"
+                                        top="50%" // Center vertically
+                                        left="50%" // Center horizontally
+                                        fontSize={25}
+                                        transform="translate(-50%, -50%)" // Move the text to center based on its size
+                                      >
+                                        ▶
+                                      </Text>
+
+                                      {camera.islive ? (
+                                        <Badge
+                                          position="absolute" // Position the badge absolutely within the container
+                                          top={2} // Top position from the edge of the container
+                                          right={2} // Right position from the edge of the container
+                                          fontSize="sm"
+                                          colorScheme="green" // You can adjust the color scheme of the badge
+                                        >
+                                          On
+                                        </Badge>
+                                      ) : (
+                                        <Badge
+                                          position="absolute" // Position the badge absolutely within the container
+                                          top={2} // Top position from the edge of the container
+                                          right={2} // Right position from the edge of the container
+                                          fontSize="sm"
+                                          colorScheme="red" // Set color to red when camera is off
+                                        >
+                                          Off
+                                        </Badge>
+                                      )}
+                                    </Box>
+
+                                    <HStack
+                                      justifyContent="space-between"
+                                      alignItems="center"
+                                    >
+                                      <Text
+                                        fontWeight="bold"
+                                        fontSize="sm"
+                                        p={1}
+                                      >
+                                        {camera.cameraname}{" "}
+                                        <span
+                                          style={{
+                                            fontSize: "11px",
+                                            fontWeight: "500",
+                                          }}
+                                        >
+                                          ({camera.deviceid})
+                                        </span>
+                                      </Text>
+
+                                      {/* Add the Menu component with option dots */}
+                                      <Menu placement="top">
+                                        <MenuButton
+                                          as={IconButton}
+                                          icon={<FiMoreVertical />}
+                                          variant="ghost"
+                                        />
+                                        <MenuList>
+                                          {!isLocal && (
+                                            <MenuItem
+                                              onClick={() =>
+                                                handleShareCameraModel(
+                                                  camera.cameraname,
+                                                  camera.cameraid
+                                                )
+                                              }
+                                              icon={<FiShare />}
+                                            >
+                                              Share This Camera
+                                            </MenuItem>
+                                          )}
+                                          <MenuItem
+                                            onClick={() =>
+                                              RemoveSharedCamera(
+                                                camera.cameraid
+                                              )
+                                            }
+                                            icon={<FiTrash2 />}
+                                          >
+                                            Remove Camera
+                                          </MenuItem>
+                                          {/* Add more menu items as needed */}
+                                        </MenuList>
+                                      </Menu>
+                                    </HStack>
+                                  </Box>
+                                </GridItem>
+                              ))}
+                            </Grid>
+                          </Box>
+                        </PullToRefresh>
+                      )}
+                    </>
+                  )}
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
+          )}
           <Tabs
             variant="enclosed"
             defaultIndex={isLocal || isRegion || isZonal || isNoRole ? 1 : 0}
           >
-            <TabList mb={isMobile ? 1 : 4}>
+            <TabList mb="4">
               {/* {!(isLocal || isRegion || isZonal) && ( */}
               {!isMobile && (
                 <>
@@ -987,7 +1581,7 @@ const CameraList = () => {
                 </>
               )}
 
-              <>
+              {/* <>
                 <Spacer />
                 <Spacer />
                 <Spacer />
@@ -1017,7 +1611,6 @@ const CameraList = () => {
                 <Spacer />
 
                 <Menu placement="top">
-                  {/* <IonSearchbar placeholder="Custom Placeholder"></IonSearchbar> */}
                   <MenuButton
                     as={IconButton}
                     icon={<FaSortAmountDownAlt />}
@@ -1028,7 +1621,7 @@ const CameraList = () => {
                     }}
                   />
                 </Menu>
-              </>
+              </> */}
               {!isMobile && isCC && (
                 <Button
                   // border={"3px solid grey"}
@@ -1041,8 +1634,10 @@ const CameraList = () => {
                   borderRadius="24px"
                   boxShadow="rgba(0, 0, 0, .2) 0 2px 3px -1px, rgba(0, 0, 0, .14) 0 3px 5px 0, rgba(0, 0, 0, .12) 0 1px 9px 0"
                   // color="#3c4043"
-                  marginBottom="1%"
+                  // marginBottom="1%"
                   marginRight="1%"
+                  marginTop="1%"
+                  marginLeft="60%"
                   cursor="pointer"
                   fontFamily="'Google Sans', Roboto, Arial, sans-serif"
                   fontSize="14px"
@@ -1076,7 +1671,7 @@ const CameraList = () => {
                 // </Button>
               )}
 
-              {isMobile && (
+              {/* {isMobile && (
                 <>
                   <Spacer />
                   <Menu placement="top">
@@ -1143,7 +1738,7 @@ const CameraList = () => {
                     )}
                   </Menu>
                 </>
-              )}
+              )} */}
             </TabList>
 
             <TabPanels>
@@ -1462,9 +2057,9 @@ const CameraList = () => {
 
               {/* Shared Cameras Panel */}
               <PullToRefresh onRefresh={handleRefresh}>
-                <TabPanel>
+              <TabPanel>
                   {isLoading ? (
-                    <Flex align="center" justify="center" height="720">
+                    <Flex align="center" justify="center" height="920">
                       <Spinner
                         size="xl"
                         thickness="4px"
@@ -1473,32 +2068,12 @@ const CameraList = () => {
                       />{" "}
                     </Flex>
                   ) : (
-                    <Box
-                      maxH="calc(100vh - 250px)"
-                      overflowY="auto"
-                      css={{
-                        "&::-webkit-scrollbar": {
-                          width: "0.2em",
-                        },
-                        "&::-webkit-scrollbar-track": {
-                          background: "transparent",
-                        },
-                        "&::-webkit-scrollbar-thumb": {
-                          background: "#888",
-                        },
-                        overflowX: "hidden", // Hide horizontal scrollbar
-                        scrollbarWidth: "thin", // For Firefox
-                        scrollbarColor: "#888 transparent", // For Firefox
-                        ":active": {
-                          overflowY: "scroll", // Show scrollbar while touched
-                        },
-                      }}
-                    >
+                    <>
                       {shareCameraList.length === 0 ? (
                         <Flex
                           alignItems="center"
                           justifyContent="center"
-                          height="100%"
+                          height="100vh" // Make the container fill the full viewport height
                         >
                           <Box
                             p={6}
@@ -1507,175 +2082,192 @@ const CameraList = () => {
                             borderColor="gray.300"
                             boxShadow="md"
                             bg="white"
+                            textAlign="center" // Center the text
                           >
-                            <Flex
-                              direction="column"
-                              alignItems="center"
-                              color="gray.500"
-                            >
-                              <Icon
-                                as={FaVideoSlash}
-                                boxSize={20}
-                                color="red.300"
-                              />
-                              <Text fontSize="xl" mt={4} fontWeight="bold">
-                                Oh no! No shared cameras found.
-                              </Text>
-                              <Text fontSize="md" mt={2} textAlign="center">
-                                It looks like you haven't been granted access to
-                                any shared cameras yet.
-                              </Text>
-                              {/* <Button
-              colorScheme="blue"
-              mt={4}
-              size="sm"
-              onClick={() => console.log("Invite button clicked")}
-            >
-              Invite Now
-            </Button> */}
-                            </Flex>
+                            <Icon
+                              as={FaVideoSlash}
+                              boxSize={20}
+                              color="red.300"
+                            />
+                            <Text fontSize="xl" mt={4} fontWeight="bold">
+                              Oh no! No shared cameras found.
+                            </Text>
+                            <Text fontSize="md" mt={2}>
+                              It looks like you haven't been granted access to
+                              any shared cameras yet.
+                            </Text>
                           </Box>
                         </Flex>
                       ) : (
-                        <Grid
-                          templateColumns="repeat(auto-fill, minmax(280px, 1fr))"
-                          gap={4}
-                        >
-                          {shareCameraList.map((camera) => (
-                            <GridItem
-                              key={camera.cameraid}
-                              width={window.innerWidth <= 280 ? "280px" : ""}
+                        <PullToRefresh onRefresh={handleRefresh}>
+                          <Box
+                            maxH="calc(100vh - 250px)"
+                            overflowY="auto"
+                            css={{
+                              "&::-webkit-scrollbar": {
+                                width: "0.2em",
+                              },
+                              "&::-webkit-scrollbar-track": {
+                                background: "transparent",
+                              },
+                              "&::-webkit-scrollbar-thumb": {
+                                background: "#888",
+                              },
+                              overflowX: "hidden", // Hide horizontal scrollbar
+                              scrollbarWidth: "thin", // For Firefox
+                              scrollbarColor: "#888 transparent", // For Firefox
+                              ":active": {
+                                overflowY: "scroll", // Show scrollbar while touched
+                              },
+                            }}
+                          >
+                            <Grid
+                              templateColumns="repeat(auto-fill, minmax(280px, 1fr))"
+                              gap={4}
                             >
-                              <Box
-                                bg="white"
-                                borderRadius="md"
-                                p={1}
-                                mb={2}
-                                boxShadow="md"
-                                // transition="box-shadow 0.3s"
-                                // _hover={{ boxShadow: 'lg' }}
-                                transition="transform 0.3s, box-shadow 0.3s" // Add transition effects
-                                _hover={{
-                                  transform: "scale(1.03)", // Scale up on hover
-                                  boxShadow: "0px 0px 7px rgba(0, 0, 0, 0.3)", // Add a shadow on hover
-                                }}
-                                // width={"280px"}
-                              >
-                                <Box position="relative" cursor="pointer">
-                                  <Image
-                                    src={
-                                      localStorage.getItem(
-                                        `thumbnail_${camera.cameraid}`
-                                      ) ||
-                                      camera.thumbnailUrl ||
-                                      "https://via.placeholder.com/600x342/000000/?text="
-                                    } // Use stored thumbnail URL or camera.thumbnailUrl
-                                    onClick={() =>
-                                      handleOpenModal(
-                                        camera.streamname,
-                                        camera.createdDate,
-                                        camera.plandays,
-                                        camera.cameraid,
-                                        camera.cameraname,
-                                        camera.planname,
-                                        camera.islive,
-                                        camera.cameraurl,
-                                        camera.deviceid
-                                      )
-                                    }
-                                    alt="Camera"
-                                    size={modalSize}
-                                    height={imageHeight}
-                                  />
-
-                                  <Text
-                                    position="absolute"
-                                    top="50%" // Center vertically
-                                    left="50%" // Center horizontally
-                                    fontSize={25}
-                                    transform="translate(-50%, -50%)" // Move the text to center based on its size
-                                  >
-                                    ▶
-                                  </Text>
-
-                                  {camera.islive ? (
-                                    <Badge
-                                      position="absolute" // Position the badge absolutely within the container
-                                      top={2} // Top position from the edge of the container
-                                      right={2} // Right position from the edge of the container
-                                      fontSize="sm"
-                                      colorScheme="green" // You can adjust the color scheme of the badge
-                                    >
-                                      On
-                                    </Badge>
-                                  ) : (
-                                    <Badge
-                                      position="absolute" // Position the badge absolutely within the container
-                                      top={2} // Top position from the edge of the container
-                                      right={2} // Right position from the edge of the container
-                                      fontSize="sm"
-                                      colorScheme="red" // Set color to red when camera is off
-                                    >
-                                      Off
-                                    </Badge>
-                                  )}
-                                </Box>
-
-                                <HStack
-                                  justifyContent="space-between"
-                                  alignItems="center"
+                              {shareCameraList.map((camera) => (
+                                <GridItem
+                                  key={camera.cameraid}
+                                  width={
+                                    window.innerWidth <= 280 ? "280px" : ""
+                                  }
                                 >
-                                  <Text fontWeight="bold" fontSize="sm" p={1}>
-                                    {camera.cameraname}{" "}
-                                    <span
-                                      style={{
-                                        fontSize: "11px",
-                                        fontWeight: "500",
-                                      }}
-                                    >
-                                      ({camera.deviceid})
-                                    </span>
-                                  </Text>
-
-                                  {/* Add the Menu component with option dots */}
-                                  <Menu placement="top">
-                                    <MenuButton
-                                      as={IconButton}
-                                      icon={<FiMoreVertical />}
-                                      variant="ghost"
-                                    />
-                                    <MenuList>
-                                      {!isLocal && (
-                                        <MenuItem
-                                          onClick={() =>
-                                            handleShareCameraModel(
-                                              camera.cameraname,
-                                              camera.cameraid
-                                            )
-                                          }
-                                          icon={<FiShare />}
-                                        >
-                                          Share This Camera
-                                        </MenuItem>
-                                      )}
-                                      <MenuItem
+                                  <Box
+                                    bg="white"
+                                    borderRadius="md"
+                                    p={1}
+                                    mb={2}
+                                    boxShadow="md"
+                                    transition="transform 0.3s, box-shadow 0.3s" // Add transition effects
+                                    _hover={{
+                                      transform: "scale(1.03)", // Scale up on hover
+                                      boxShadow:
+                                        "0px 0px 7px rgba(0, 0, 0, 0.3)", // Add a shadow on hover
+                                    }}
+                                  >
+                                    <Box position="relative" cursor="pointer">
+                                      <Image
+                                        src={
+                                          localStorage.getItem(
+                                            `thumbnail_${camera.cameraid}`
+                                          ) ||
+                                          camera.thumbnailUrl ||
+                                          "https://via.placeholder.com/600x342/000000/?text="
+                                        } // Use stored thumbnail URL or camera.thumbnailUrl
                                         onClick={() =>
-                                          RemoveSharedCamera(camera.cameraid)
+                                          handleOpenModal(
+                                            camera.streamname,
+                                            camera.createdDate,
+                                            camera.plandays,
+                                            camera.cameraid,
+                                            camera.cameraname,
+                                            camera.planname,
+                                            camera.islive,
+                                            camera.cameraurl,
+                                            camera.deviceid
+                                          )
                                         }
-                                        icon={<FiTrash2 />}
+                                        alt="Camera"
+                                        size={modalSize}
+                                        height={imageHeight}
+                                      />
+
+                                      <Text
+                                        position="absolute"
+                                        top="50%" // Center vertically
+                                        left="50%" // Center horizontally
+                                        fontSize={25}
+                                        transform="translate(-50%, -50%)" // Move the text to center based on its size
                                       >
-                                        Remove Camera
-                                      </MenuItem>
-                                      {/* Add more menu items as needed */}
-                                    </MenuList>
-                                  </Menu>
-                                </HStack>
-                              </Box>
-                            </GridItem>
-                          ))}
-                        </Grid>
+                                        ▶
+                                      </Text>
+
+                                      {camera.islive ? (
+                                        <Badge
+                                          position="absolute" // Position the badge absolutely within the container
+                                          top={2} // Top position from the edge of the container
+                                          right={2} // Right position from the edge of the container
+                                          fontSize="sm"
+                                          colorScheme="green" // You can adjust the color scheme of the badge
+                                        >
+                                          On
+                                        </Badge>
+                                      ) : (
+                                        <Badge
+                                          position="absolute" // Position the badge absolutely within the container
+                                          top={2} // Top position from the edge of the container
+                                          right={2} // Right position from the edge of the container
+                                          fontSize="sm"
+                                          colorScheme="red" // Set color to red when camera is off
+                                        >
+                                          Off
+                                        </Badge>
+                                      )}
+                                    </Box>
+
+                                    <HStack
+                                      justifyContent="space-between"
+                                      alignItems="center"
+                                    >
+                                      <Text
+                                        fontWeight="bold"
+                                        fontSize="sm"
+                                        p={1}
+                                      >
+                                        {camera.cameraname}{" "}
+                                        <span
+                                          style={{
+                                            fontSize: "11px",
+                                            fontWeight: "500",
+                                          }}
+                                        >
+                                          ({camera.deviceid})
+                                        </span>
+                                      </Text>
+
+                                      {/* Add the Menu component with option dots */}
+                                      <Menu placement="top">
+                                        <MenuButton
+                                          as={IconButton}
+                                          icon={<FiMoreVertical />}
+                                          variant="ghost"
+                                        />
+                                        <MenuList>
+                                          {!isLocal && (
+                                            <MenuItem
+                                              onClick={() =>
+                                                handleShareCameraModel(
+                                                  camera.cameraname,
+                                                  camera.cameraid
+                                                )
+                                              }
+                                              icon={<FiShare />}
+                                            >
+                                              Share This Camera
+                                            </MenuItem>
+                                          )}
+                                          <MenuItem
+                                            onClick={() =>
+                                              RemoveSharedCamera(
+                                                camera.cameraid
+                                              )
+                                            }
+                                            icon={<FiTrash2 />}
+                                          >
+                                            Remove Camera
+                                          </MenuItem>
+                                          {/* Add more menu items as needed */}
+                                        </MenuList>
+                                      </Menu>
+                                    </HStack>
+                                  </Box>
+                                </GridItem>
+                              ))}
+                            </Grid>
+                          </Box>
+                        </PullToRefresh>
                       )}
-                    </Box>
+                    </>
                   )}
                 </TabPanel>
               </PullToRefresh>

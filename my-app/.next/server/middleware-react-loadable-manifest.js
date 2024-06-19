@@ -1,1 +1,1 @@
-self.__REACT_LOADABLE_MANIFEST="{\"..\\\\..\\\\node_modules\\\\@capacitor\\\\browser\\\\dist\\\\esm\\\\index.js -> ./web\":{\"id\":\"..\\\\..\\\\node_modules\\\\@capacitor\\\\browser\\\\dist\\\\esm\\\\index.js -> ./web\",\"files\":[\"static/chunks/node_modules_capacitor_browser_dist_esm_web_js.js\"]}}"
+self.__REACT_LOADABLE_MANIFEST="{}"
