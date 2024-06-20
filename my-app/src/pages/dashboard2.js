@@ -1,4 +1,4 @@
-import React, { useState,useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useMediaQuery } from "@chakra-ui/react";
 import {
   Card,
@@ -57,10 +57,6 @@ const Dashboard2 = () => {
   const [Locations, setLocations] = useState([]);
   const [videoLoadError, setVideoLoadError] = useState(false);
 
-
-
-
-
   const [modifiedCameraUrl, setModifiedCameraUrl] = useState("");
   const [lastfilename, setLastfilename] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
@@ -78,7 +74,6 @@ const Dashboard2 = () => {
     setVideoLoadError(error);
   };
 
-
   const handleOpenModal = (
     streamname,
     createdDate,
@@ -91,17 +86,15 @@ const Dashboard2 = () => {
     deviceId
   ) => {
     function simplifyString(inputString) {
-      // Check if inputString is defined and is a string
-      if (typeof inputString !== 'string') {
+      if (typeof inputString !== "string") {
         return "";
       }
-      // Remove non-alphanumeric characters and convert to lowercase
       return inputString.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
     }
-        const newpname = simplifyString(planname);
-    
-    console.log(newpname); // Output the result
-    
+    const newpname = simplifyString(planname);
+
+    console.log(newpname);
+
     // const modifiedCameraUrl = cameraurl.replace(':1938', ':443');
 
     let modifiedCameraUrl = cameraurl;
@@ -166,7 +159,6 @@ const Dashboard2 = () => {
     setPlantext(planname);
     setisLive(islive);
     setVideoUrl(`https://${modifiedCameraUrl}${streamname}/${lastfilename}`);
-    console.log("videoUrl:  ",`https://${modifiedCameraUrl}${streamname}/${lastfilename}`);
     setIsModalOpen(true);
     setStreamid(streamname);
     setCameraid(cameraId);
@@ -175,10 +167,8 @@ const Dashboard2 = () => {
     // console.log(cameraId)
   };
   const jumptoLive = () => {
-    // Assuming you have the live URL for your video.
     const liveUrl = `https://${modifiedCameraUrl}${streamid}/${lastfilename}`;
     setVideoUrl(liveUrl);
-    // setSelectedDate(false);
   };
 
   const liveFeedRef = useRef();
@@ -189,14 +179,12 @@ const Dashboard2 = () => {
     // setStartDateTime("");
     // setEndDateTime("");
     setVideoLoadError(false);
-    // Call the destroyVideoPlayer function in the LiveFeed component
     if (liveFeedRef.current) {
       liveFeedRef.current.destroyVideoPlayer();
     }
   };
 
-
-
+  console.log("Video Url: ", videoUrl);
   useEffect(() => {
     fetchLocation();
     fetchCameracount();
@@ -205,7 +193,7 @@ const Dashboard2 = () => {
   const fetchLocation = async () => {
     try {
       const locationData = await getAllLocations();
-      console.log("Fetched Locations:", locationData.locations);
+      // console.log("Fetched Locations:", locationData.locations);
       setLocations(locationData.locations);
     } catch (error) {
       console.error("Error fetching locations:", error);
@@ -218,7 +206,7 @@ const Dashboard2 = () => {
   const fetchCameracount = async () => {
     try {
       const camCountData = await getCameraCounts();
-      console.log("Camera Count: ", camCountData);
+      // console.log("Camera Count: ", camCountData);
       setLiveCamCount(camCountData.liveCount);
       setOffCamCount(camCountData.offlineCount);
       setTotalCam(camCountData.totalCameras);
@@ -233,28 +221,16 @@ const Dashboard2 = () => {
     setIsModalOpen(true);
   };
 
-  // const fetchData = async (locationName) => {
-  //   try {
-  //     console.log("locationName", locationName);
-  //     let res = await searchCamerasByLocation(locationName);
-  //     setCameras(res.cameras);
-  //     console.log("res.cameras:   ", res.cameras);
-  //   } catch (error) {
-  //     console.error("Error fetching camera info:", error);
-  //   }
-  // };
   const fetchData = async (locationName) => {
     try {
       console.log("locationName", locationName);
       let res = await searchCamerasByLocation(locationName);
-      setCameras(res.cameralists);
-      console.log("res.camerasList:   ", res.cameralists);
+      setCameras(res.cameras);
+      console.log("res.cameras:   ", res.cameras);
     } catch (error) {
       console.error("Error fetching camera info:", error);
     }
   };
-
-  
 
   const handleCameraClick = (camera) => {
     setSelectedCamera(camera);
@@ -268,8 +244,15 @@ const Dashboard2 = () => {
 
   const netWorkErrorCam = 2;
   const sortedCameras = [...cameras].sort((a, b) =>
-    a.name.localeCompare(b.name)
+    (a.name ?? "").localeCompare(b.name ?? "")
   );
+  const handleThumbnailGenerated = (thumbnailUrl, cameraId) => {
+    const updatedCameraList = cameras.map((camera) =>
+      camera.cameraid === cameraId ? { ...camera, thumbnailUrl } : camera
+    );
+
+    setCameras(updatedCameraList);
+  };
 
   return (
     <div className="dashboard-container">
@@ -366,23 +349,23 @@ const Dashboard2 = () => {
                   {
                     label: "Online",
                     data: [200, 300, 400, 500, 600, 620, 800],
-                    backgroundColor: "rgba(0,128,0,0.5)", // color for "Online"
-                    borderColor: "rgba(0,128,0,1)", // border color for "Online"
+                    backgroundColor: "rgba(0,128,0,0.5)",
+                    borderColor: "rgba(0,128,0,1)",
                     borderWidth: 1,
                     borderRadius: 5,
                   },
                   {
                     label: "Offline",
                     data: [100, 175, 240, 300, 305, 450, 500],
-                    backgroundColor: "rgba(255, 0, 0,0.5)", // color for "Offline"
-                    borderColor: "rgba(255, 0, 0,1)", // border color for "Offline"
+                    backgroundColor: "rgba(255, 0, 0,0.5)",
+                    borderColor: "rgba(255, 0, 0,1)",
                     borderRadius: 5,
                   },
                   {
                     label: "Total",
                     data: [250, 375, 470, 590, 660, 780, 900],
-                    backgroundColor: "rgba(0, 0, 255,0.5)", // color for "Total"
-                    borderColor: "rgba(0, 0, 255,1)", // border color for "Total"
+                    backgroundColor: "rgba(0, 0, 255,0.5)",
+                    borderColor: "rgba(0, 0, 255,1)",
                     borderRadius: 5,
                   },
                 ],
@@ -478,14 +461,6 @@ const Dashboard2 = () => {
                     </Button>
                     <br />
                     <text> 🟢On 0 🔴Off 0</text>
-                    {/* <Box display="flex" alignItems="center">
-                      <Image src={animationg} alt="Online" boxSize="20px" mr="2" />
-                      <Text>On 0</Text>
-                    </Box>
-                    <Box display="flex" alignItems="center">
-                      <Image src={animationr} alt="Offline" boxSize="20px" mr="2" />
-                      <Text>Off 0</Text>
-                    </Box> */}
                   </CardHeader>
                 </Card>
               ))
@@ -508,7 +483,7 @@ const Dashboard2 = () => {
               {sortedCameras.map((camera) => (
                 <Button
                   key={camera.id}
-                  onClick={() =>
+                  onClick={() => {
                     handleOpenModal(
                       camera.streamname,
                       camera.createdDate,
@@ -519,8 +494,9 @@ const Dashboard2 = () => {
                       camera.islive,
                       camera.cameraurl,
                       camera.deviceid
-                    )
-                  }
+                    );
+                    handleCameraClick(camera);
+                  }}
                   // onClick={() => handleCameraClick(camera)}
                   width="100%"
                   height="50px"
@@ -529,7 +505,7 @@ const Dashboard2 = () => {
                   color="black"
                   _hover={{ bg: "gray.400" }}
                 >
-                  {camera.name}
+                  {camera.cameraname}
                 </Button>
               ))}
             </div>
@@ -545,22 +521,13 @@ const Dashboard2 = () => {
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>{selectedCamera?.name}</ModalHeader>
+          <ModalHeader>{selectedCamera?.cameraname}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {selectedCamera && (
-              // <LiveFeed
-              //   showTimeline={false}
-              //   live={true}
-              //   selectedDate={new Date()}
-              //   handleThumbnailGenerated={() => {}}
-              //   cameraId={selectedCamera.id}
-              //   isLive={true}
-              //   recordingDates={[]}
-              //   onVideoLoadError={() => {}}
-              // />
               <LiveFeed
-                // http://media1.ambicam.com:8080/dvr30/8b522279-587d-4079-8408-3aa42c1ea751/26-07-2023.m3u8
+                //my code        https://media1.ambicam.com/dvr1/2a6ebf9e-7359-4abd-a683-e9526cb73f53/19_06_24/2a6ebf9e-7359-4abd-a683-e9526cb73f53_live.m3u8
+                //cameralistcode https://media1.ambicam.com:443/dvr1/2a6ebf9e-7359-4abd-a683-e9526cb73f53/19_06_24/2a6ebf9e-7359-4abd-a683-e9526cb73f53_live.m3u8
                 live={`${videoUrl}`}
                 autoPlay={true}
                 ref={liveFeedRef}

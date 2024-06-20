@@ -13,6 +13,13 @@ import {
   Tr,
   useMediaQuery,
   useToast,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton
 } from "@chakra-ui/react";
 import { MdEdit, MdDelete } from "react-icons/md";
 import withAuth from "@/components/withAuth";
@@ -26,13 +33,14 @@ import { updateCameraZone } from "./api/updateCameraZone";
 import { updateCameraSubZone } from "./api/updateCameraSubZone";
 import { searchCamerasByLocation } from "./api/searchCamerasByLocation";
 import { searchCamerasByName } from "./api/searchCamerasByName";
+import { deleteCamera } from "./api/deletecamera";
 
 const ManageCamera = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [totalPages, setTotalPages] = useState(0);
-  const [cameras, setCameras] = useState([]); // Ensure cameras is always an array
+  const [cameras, setCameras] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [searchInput, setSearchInput] = useState("");
   const [searchedCameras, setSearchedCameras] = useState([]);
@@ -42,6 +50,8 @@ const ManageCamera = () => {
   const [editingIndices, setEditingIndices] = useState([]);
   const [page, setPage] = useState(1);
   const [selectedLocation, setSelectedLocation] = useState("");
+  const [deletingIndex, setDeletingIndex] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   const toast = useToast();
 
@@ -67,10 +77,8 @@ const ManageCamera = () => {
       let res;
       if (selectedLocation) {
         res = await searchCamerasByLocation(selectedLocation);
-        console.log("Response: If", res);
         setCameras(res.cameralists);
         setTotalPages(res.totalPages);
-        setLoading(false);
       } else {
         const userDetailsString = localStorage.getItem("userDetails");
         if (!userDetailsString) {
@@ -79,21 +87,19 @@ const ManageCamera = () => {
         const userDetails = JSON.parse(userDetailsString);
         const customerId = userDetails.customerid;
         res = await getCameraInfo(customerId, page, itemsPerPage);
-
-        console.log("Response Else:", res);
         setCameras(res.cameras);
         setTotalPages(res.totalPages);
-        setLoading(false);
       }
     } catch (error) {
       console.error("Error fetching camera info:", error);
-      setLoading(false);
       toast({
         description: "Failed to fetch camera info",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,9 +110,9 @@ const ManageCamera = () => {
       setLocations(locationsData.locations);
       setZones(locationsData.zones);
       setSubZones(locationsData.subZones);
-      setLoading(false);
     } catch (error) {
       console.error("Error fetching locations:", error);
+    } finally {
       setLoading(false);
     }
   };
@@ -132,6 +138,27 @@ const ManageCamera = () => {
       }
     } catch (error) {
       console.error("Error searching user:", error);
+    }
+  };
+
+  const handleDelete = async (index) => {
+    const allCameras = [...cameras];
+    const camIdToDelete = allCameras[index]._id;
+    const deviceId = allCameras[index].device_id;
+
+    try {
+      const response = await deleteCamera(camIdToDelete, deviceId);
+      if (response.success) {
+        allCameras.splice(index, 1);
+        setCameras(allCameras);
+        showToast("Camera deleted successfully", "success");
+        await fetchData();
+      } else {
+        showToast(response.message, "error");
+      }
+    } catch (error) {
+      console.error("Error deleting camera:", error);
+      showToast("Error deleting camera. Please try again.", "error");
     }
   };
 
@@ -343,7 +370,7 @@ const ManageCamera = () => {
                 cameras.map((camera, index) => (
                   <Tr key={index}>
                     <Td>{index + 1}</Td>
-                    <Td>{camera.cameraid}</Td>
+                    <Td>{camera.name}</Td>
                     <Td>
                       {editingIndices.includes(index) ? (
                         <Select
@@ -417,7 +444,15 @@ const ManageCamera = () => {
                         >
                           {editingIndices.includes(index) ? "Save" : "Edit"}
                         </Button>
-                        <Button bg="red.400" size="sm" color="white">
+                        <Button
+                          bg="red.400"
+                          size="sm"
+                          color="white"
+                          onClick={() => {
+                            setDeletingIndex(index);
+                            setShowModal(true);
+                          }}
+                        >
                           Delete
                         </Button>
                       </Box>
@@ -434,20 +469,43 @@ const ManageCamera = () => {
               <Tr>
                 <Th colSpan={5}>
                   <Td colSpan={4}>
-                    {totalPages>1 &&(
+                    {totalPages > 1 && (
                       <Pagination
-                      page={page}
-                      totalPages={totalPages}
-                      setNextPage={setNextPage}
-                      setPreviousPage={setPreviousPage}
-                      setPage={setPage}
-                    />
+                        page={page}
+                        totalPages={totalPages}
+                        setNextPage={setNextPage}
+                        setPreviousPage={setPreviousPage}
+                        setPage={setPage}
+                      />
                     )}
                   </Td>
                 </Th>
               </Tr>
             </Tfoot>
           </Table>
+          <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
+            <ModalOverlay />
+            <ModalContent>
+              <ModalHeader>Confirmation</ModalHeader>
+              <ModalCloseButton />
+              <ModalBody>Are you sure you want to delete this Camera?</ModalBody>
+              <ModalFooter>
+                <Button
+                  colorScheme="blue"
+                  mr={3}
+                  onClick={() => {
+                    handleDelete(deletingIndex);
+                    setShowModal(false);
+                  }}
+                >
+                  Yes
+                </Button>
+                <Button variant="ghost" onClick={() => setShowModal(false)}>
+                  No
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
         </Box>
       </Box>
     </Box>
