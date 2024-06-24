@@ -21,9 +21,12 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { BsCameraVideo, BsCollectionPlay } from "react-icons/bs";
-import { FiChevronDown, FiMapPin } from "react-icons/fi";
+import { FiChevronDown } from "react-icons/fi";
 import { MdOutlineManageAccounts, MdOutlineDashboardCustomize } from "react-icons/md";
 import { TbCameraCog } from "react-icons/tb";
+import { BiSolidMapPin } from "react-icons/bi";
+import { GrLocation } from "react-icons/gr";
+
 import ptnlogo from "../assets/images/PatanjaliLogo.png";
 import { logout } from "@api/auth";
 
@@ -33,7 +36,8 @@ const LinkItems = [
   { name: "Dashboard", icon: MdOutlineDashboardCustomize, path: "/dashboard2" },
   { name: "CameraList", icon: TbCameraCog, path: "/manageCamera" },
   { name: "UserList", icon: MdOutlineManageAccounts, path: "/manageUser" },
-  { name: "googlemap", icon: FiMapPin, path: "/googlemap" },
+  { name: "Location", icon:BiSolidMapPin, path:"/manageLocation"},
+  { name: "Map", icon: GrLocation, path: "/googlemap" },
 ];
 
 export default function Header() {

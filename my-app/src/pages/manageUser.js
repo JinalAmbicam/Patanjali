@@ -44,7 +44,8 @@ import { filterRoles } from "./api/filterRoles";
 
 const manageUser = () => {
   const [isMobile, setIsMobile] = useState(false);
-  const [isDesktop] = useMediaQuery("(min-width: 1025px)");
+  const [isTablet, setIsTablet] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [totalPages, setTotalPages] = useState(0);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -66,6 +67,8 @@ const manageUser = () => {
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [selectedUser, setSelectedUser] = useState(null); // State to track the selected user for shared cameras
   const [showSharedCamerasModal, setShowSharedCamerasModal] = useState(false); // State to control the shared cameras modal
+  const [isLargerThan480] = useMediaQuery("(min-width: 480px)");
+  const [isLargerThan1024] = useMediaQuery("(min-width: 1024px)");
 
   const toast = useToast();
 
@@ -80,17 +83,10 @@ const manageUser = () => {
   };
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 480);
-    };
-
-    handleResize(); 
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+    setIsMobile(!isLargerThan480);
+    setIsTablet(isLargerThan480 && !isLargerThan1024);
+    setIsDesktop(isLargerThan1024);
+  }, [isLargerThan480, isLargerThan1024]);
 
   useEffect(() => {
     fetchRole();
@@ -277,12 +273,13 @@ const manageUser = () => {
       {isDesktop && <DesktopHeader />}
       {isMobile && <MobileHeader />}
       <Box
-        marginLeft={"15vw"}
-        marginTop={"5vh"}
+        marginLeft={isMobile ? "4vw" : "15vw"}
+        marginTop={isMobile ? "10vh" : "5vh"}
         marginRight={"12vw"}
         overflow="auto"
         display={"flex"}
         flexDirection="column"
+        fontSize={isMobile ? "12px" : "16px"}
       >
         <Box display="flex" marginBottom="2rem" justifyContent="space-between">
           <input
@@ -294,21 +291,24 @@ const manageUser = () => {
             style={{
               border: "2px solid gray",
               borderRadius: "5px",
-              width: "30vw",
+              width: isMobile ? "40vw" : isTablet ? "40vw" : "30vw",
               height: "5vh",
               marginRight: "1%",
               paddingLeft: "1%",
             }}
           />
-          <Button
-            colorScheme="blue"
-            size="md"
-            onClick={handleButton}
-            borderRadius="5px"
-            width={"6vw"}
-          >
-            Search
-          </Button>
+          {!isMobile && (
+            <Button
+              colorScheme="blue"
+              size="md"
+              onClick={handleButton}
+              borderRadius="5px"
+              width="10vw"
+              marginLeft="2vw"
+            >
+              Search
+            </Button>
+          )}
           
           <Select
             flex={1}
