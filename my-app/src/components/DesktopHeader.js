@@ -200,7 +200,7 @@ export default function Header() {
               fontWeight="medium"
               mt={1}
               display="inline"
-              color={isSidebarHovered || isActive ? (isActive ? "blue.600" : "black") : "gray.200"}
+              color={isSidebarHovered || isActive ? (isActive ? "blue.600" : "black") : "gray.100"}
 
             >
 

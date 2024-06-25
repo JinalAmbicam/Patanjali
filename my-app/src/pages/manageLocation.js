@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import DesktopHeader from "../components/DesktopHeader";
 import MobileHeader from "@/components/MobileHeader";
 import { getAllLocations } from "./api/getAllLocations";
@@ -104,6 +104,8 @@ export default function ManageLocation() {
   const [oldSubZone, setOldSubZone] = useState("");
   const [activeTab, setActiveTab] = useState(0);
 
+  const inputRef = useRef(null);
+
   useEffect(() => {
     setIsMobile(!isLargerThan480);
     setIsTablet(isLargerThan480 && !isLargerThan1024);
@@ -115,6 +117,14 @@ export default function ManageLocation() {
     fetchZones();
     fetchSubZones();
   }, []);
+
+  useEffect(() => {
+    if (isOpenEdit || isOpenEditZone || isOpenEditSubZone) {
+      setTimeout(() => {
+        inputRef.current.focus();
+      }, 100);
+    }
+  }, [isOpenEdit,isOpenEditZone,isOpenEditSubZone]);
 
   const toast = useToast();
   const showToast = (msg, status) => {
@@ -169,8 +179,8 @@ export default function ManageLocation() {
       console.log("Location name before sending:", locationName);
       const result = await createLocation(locationName);
       console.log("Result:", result);
-      setLocationName(""); // Reset the location name input
-      fetchLocations(); // Refresh the locations list after adding
+      setLocationName("");
+      fetchLocations(); 
       onCloseAdd();
       showToast(`${locationName} Added Successfully`, "success");
     } catch (error) {
@@ -183,8 +193,8 @@ export default function ManageLocation() {
       console.log("Zone name before sending:", zoneName);
       const result = await createZone(zoneName);
       console.log("Result:", result);
-      setZoneName(""); // Reset the location name input
-      fetchZones(); // Refresh the locations list after adding
+      setZoneName("");
+      fetchZones();
       onCloseAddZone();
       showToast(`${zoneName} Added Successfully`, "success");
     } catch (error) {
@@ -208,7 +218,7 @@ export default function ManageLocation() {
   const handleUpdateLocation = async () => {
     try {
       console.log("Location name before sending:", locationName);
-      const result = await updateLocation(selectedLocationId, locationName); // Assuming updateLocation function accepts location ID and name
+      const result = await updateLocation(selectedLocationId, locationName); 
       console.log("Result:", result);
       setLocationName("");
       fetchLocations();
@@ -222,7 +232,7 @@ export default function ManageLocation() {
   const handleUpdateZone = async () => {
     try {
       console.log("Zone name before sending:", zoneName);
-      const result = await updateZone(selectedZoneId, zoneName); // Assuming updateLocation function accepts location ID and name
+      const result = await updateZone(selectedZoneId, zoneName);
       console.log("Result:", result);
       setZoneName("");
       fetchZones();
@@ -236,7 +246,7 @@ export default function ManageLocation() {
   const handleUpdateSubZone = async () => {
     try {
       console.log("subzone name before sending:", subZoneName);
-      const result = await updateSubZone(selectedSubZoneId, subZoneName); // Assuming updateLocation function accepts location ID and name
+      const result = await updateSubZone(selectedSubZoneId, subZoneName);
       console.log("Result:", result);
       setSubZoneName("");
       fetchSubZones();
@@ -265,7 +275,7 @@ export default function ManageLocation() {
       console.log("Deleting Zone with ID:", selectedZoneId);
       const result = await deleteZone(selectedZoneId);
       console.log("Delete Result:", result);
-      fetchZones(); // Refresh the locations list after deleting
+      fetchZones(); 
       onCloseDeleteZone();
       showToast(`${zoneName} Deleted Successfully`, "success");
     } catch (error) {
@@ -286,42 +296,15 @@ export default function ManageLocation() {
   };
 
   const handleInputChange = (event) => {
-    const inputValue = event.target.value;
-    const regex = /^[a-zA-Z ]*$/;
-    if (regex.test(inputValue)) {
-      setLocationName(inputValue);
-    } else {
-      showToast(
-        "Only alphabetic characters and spaces are allowed.",
-        "warning"
-      );
-    }
+    setLocationName(event.target.value);
   };
 
   const handleInputChangeZone = (event) => {
-    const inputValue = event.target.value;
-    const regex = /^[a-zA-Z ]*$/;
-    if (regex.test(inputValue)) {
-      setZoneName(inputValue);
-    } else {
-      showToast(
-        "Only alphabetic characters and spaces are allowed.",
-        "warning"
-      );
-    }
+    setZoneName(event.target.value);
   };
 
   const handleInputChangeSubZone = (event) => {
-    const inputValue = event.target.value;
-    const regex = /^[a-zA-Z ]*$/;
-    if (regex.test(inputValue)) {
-      setSubZoneName(inputValue);
-    } else {
-      showToast(
-        "Only alphabetic characters and spaces are allowed.",
-        "warning"
-      );
-    }
+    setSubZoneName(event.target.value);
   };
 
   const handleEditClick = (locationId, currentLocationName) => {
@@ -358,9 +341,15 @@ export default function ManageLocation() {
   };
 
   const handleDeleteClickSubZone = (subZoneId) => {
-    setSelectedZoneId(subZoneId);
+    setSelectedSubZoneId(subZoneId);
     onOpenDeleteSubZone();
   };
+
+  const handleKeypress = (event,callback)=>{
+    if(event.key==="Enter"){
+      callback();
+    }
+  }
 
   return (
     <>
@@ -369,20 +358,21 @@ export default function ManageLocation() {
           {isDesktop && <DesktopHeader />}
           {isMobile && <MobileHeader />}
         </Box>
-        <Box marginTop="3%" marginLeft="13%" marginRight="10%">
+        <Box marginTop="2%" marginLeft="8%" marginRight="10%">
           <Box>
             <Tabs
-              variant="enclosed"
+              variant="enclosed-colored"
+              isFitted
               onChange={(index) => {
                 setActiveTab(index);
               }}
             >
               <TabList>
-                <Tab _selected={{ color: "white", bg: "blue.500" }}>
+                <Tab >
                   Location
                 </Tab>
-                <Tab _selected={{ color: "white", bg: "blue.500" }}>Zones</Tab>
-                <Tab _selected={{ color: "white", bg: "blue.500" }}>
+                <Tab>Zones</Tab>
+                <Tab>
                   SubZones
                 </Tab>
                 {activeTab == 0 && (
@@ -611,11 +601,15 @@ export default function ManageLocation() {
                 value={oldLocation}
                 isReadOnly
                 marginBottom="1%"
+                _readOnly={{ color: "gray.800", fontWeight: "bold" }}
               />
               <Input
                 placeholder="Enter new location name"
                 value={locationName}
+                ref={inputRef}
                 onChange={handleInputChange}
+                onKeyDown={(e)=>handleKeypress(e,handleUpdateLocation)}
+
                 type="text"
                 marginBottom="1%"
               />
@@ -635,6 +629,7 @@ export default function ManageLocation() {
             </ModalFooter>
           </ModalContent>
         </Modal>
+
         <Modal isOpen={isOpenDelete} onClose={onCloseDelete}>
           <ModalOverlay />
           <ModalContent>
@@ -698,12 +693,15 @@ export default function ManageLocation() {
                 value={oldZone}
                 isReadOnly
                 marginBottom="1%"
+                _readOnly={{ color: "gray.800", fontWeight: "bold" }}
               />
               <Input
                 placeholder="Enter new Zone name"
                 value={zoneName}
                 type="text"
+                ref={inputRef}
                 onChange={handleInputChangeZone}
+                onKeyDown={(e)=>handleKeypress(e,handleUpdateZone)}
                 marginBottom="1%"
               />
             </ModalBody>
@@ -739,9 +737,7 @@ export default function ManageLocation() {
               >
                 Delete
               </Button>
-              <Button color="white" onClick={onCloseDeleteZone}>
-                Cancel
-              </Button>
+              <Button onClick={onCloseDeleteZone}>Cancel</Button>
             </ModalFooter>
           </ModalContent>
         </Modal>
@@ -768,9 +764,7 @@ export default function ManageLocation() {
               >
                 Add
               </Button>
-              <Button color="white" onClick={onCloseAddSubZone}>
-                Cancel
-              </Button>
+              <Button onClick={onCloseAddSubZone}>Cancel</Button>
             </ModalFooter>
           </ModalContent>
         </Modal>
@@ -789,8 +783,11 @@ export default function ManageLocation() {
               <Input
                 placeholder="Enter new SubZone name"
                 value={subZoneName}
+                ref={inputRef}
                 onChange={handleInputChangeSubZone}
+                onKeyDown={(e)=>handleKeypress(e,handleUpdateSubZone)}
                 marginBottom="1%"
+                _readOnly={{ color: "gray.800", fontWeight: "bold" }}
               />
             </ModalBody>
             <ModalFooter>
@@ -802,9 +799,7 @@ export default function ManageLocation() {
               >
                 Update
               </Button>
-              <Button color="white" onClick={onCloseEditSubZone}>
-                Cancel
-              </Button>
+              <Button onClick={onCloseEditSubZone}>Cancel</Button>
             </ModalFooter>
           </ModalContent>
         </Modal>
@@ -825,9 +820,7 @@ export default function ManageLocation() {
               >
                 Delete
               </Button>
-              <Button color="white" onClick={onCloseDeleteSubZone}>
-                Cancel
-              </Button>
+              <Button onClick={onCloseDeleteSubZone}>Cancel</Button>
             </ModalFooter>
           </ModalContent>
         </Modal>
