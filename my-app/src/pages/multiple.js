@@ -15,6 +15,7 @@ import {
   Spinner,
   Flex,
   Link,
+  Select,
 } from "@chakra-ui/react";
 import OfflineMessage from "@/components/OfflineMessage";
 import ReactPaginate from "react-paginate";
@@ -25,28 +26,38 @@ const CameraFeedsPage = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [cameraList, setCameraList] = useState([]);
   const [intervalId, setIntervalId] = useState(null);
-
+  const [filteredCameraList, setFilteredCameraList] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState("");
   const fetchData = async () => {
     const userDetails = JSON.parse(localStorage.getItem("userDetails"));
-
     const customerId = userDetails.customerid;
     const resultPerPage = 2000;
     const page = 1;
+
     try {
       const result = await getCustomerCameraList(
         customerId,
         page,
         resultPerPage
       );
-      setCameraList(result.cameras);
-      // console.log(result.cameras);
+      const cameras = result.cameras;
+
+      const locationsSet = new Set(
+        cameras.map((camera) => camera.cameraname.split(" ")[0])
+      );
+
+      const locations = Array.from(locationsSet);
+
+      setCameraList(cameras);
+      setLocations(locations);
+      setFilteredCameraList(cameras);
     } catch (error) {
       console.error("Error fetching camera list:", error);
     } finally {
-      setIsLoading(false); // Set loading state to false when data fetching is complete
+      setIsLoading(false);
     }
   };
-
   useEffect(() => {
     fetchData(); // Call fetchData from useEffect
     const id = setInterval(fetchData, 5000);
@@ -209,9 +220,25 @@ const CameraFeedsPage = () => {
           <MobileHeader />
         </>
       )}
-
-      {/* Desktop Header */}
       {!isMobile && <DesktopHeader />}
+      <Box
+        display="flex"
+        alignItems="center"
+        marginLeft={isMobile ? "4vw" : "88vw"}
+        marginRight={isMobile ? "2vw" : "2vw"}
+        marginTop={isMobile ? "10vh" : "2vh"}
+        border="2px solid grey"
+        borderRadius="5px"
+      >
+        <Select onChange={(e) => setSelectedLocation(e.target.value)}>
+          <option value="">All Locations</option>
+          {locations.map((location) => (
+            <option key={location} value={location}>
+              {location}
+            </option>
+          ))}
+        </Select>
+      </Box>
 
       <Box
         paddingTop={isMobile ? "5rem" : "0.8rem"}
@@ -237,192 +264,230 @@ const CameraFeedsPage = () => {
               paddingBottom={4}
             >
               {!isMobile
-                ? currentPageData.map((camera) => (
-                    <GridItem key={camera.cameraid}>
-                      <div
-                        bg="white"
-                        borderRadius="md"
-                        p={1}
-                        mb={2}
-                        boxShadow="md"
-                        transition="box-shadow 0.3s"
-                        _hover={{ boxShadow: "lg" }}
-                        width={isMobile ? "100%" : "280px"} // Adjust the width for mobile and desktop
-                        maxW={isMobile ? "100%" : "300px"} // Limit the maximum width of the card
-                      >
-                        <Box position="relative">
-                          {/* <Image src="https://via.placeholder.com/240x160" alt="Camera" borderRadius="md" mb={4} /> */}
-                          {camera.islive ? (
-                            <LiveFeed
-                              live={`${getModifiedLiveUrl(camera)}`}
-                              // live={`https://${camera.cameraurl.replace(':1938/', ':443/')}${camera.streamname}/${camera.cameraurl.startsWith('media5') ? `${camera.streamname}.m3u8` : 'index.m3u8'}`}
-                              isPlaying={isPlaying}
-                              onPlay={handlePlay}
-                              onPause={handlePause}
-                              handleThumbnailGenerated={
-                                handleThumbnailGenerated
-                              }
-                              showTimeline={false}
-                              width="280px"
-                              height="160px"
-                              isOn={camera.islive}
-                            />
+                ? currentPageData
+                    .filter((camera) =>
+                      selectedLocation
+                        ? camera.cameraname.startsWith(selectedLocation)
+                        : true
+                    )
+                    .map((camera) => (
+                      <GridItem key={camera.cameraid}>
+                        <div
+                          bg="white"
+                          borderRadius="md"
+                          p={1}
+                          mb={2}
+                          boxShadow="md"
+                          transition="box-shadow 0.3s"
+                          _hover={{ boxShadow: "lg" }}
+                          width={isMobile ? "100%" : "280px"} // Adjust the width for mobile and desktop
+                          maxW={isMobile ? "100%" : "300px"} // Limit the maximum width of the card
+                        >
+                          <Box position="relative">
+                            {camera.islive ? (
+                              <LiveFeed
+                                live={`${getModifiedLiveUrl(camera)}`}
+                                isPlaying={isPlaying}
+                                onPlay={handlePlay}
+                                onPause={handlePause}
+                                handleThumbnailGenerated={
+                                  handleThumbnailGenerated
+                                }
+                                showTimeline={false}
+                                width="280px"
+                                height="160px"
+                                isOn={camera.islive}
+                              />
+                            ) : (
+                              <OfflineMessage
+                                style={{
+                                  height: "160px",
+                                  visibility: "hidden",
+                                }}
+                              />
+                            )}
+                            {camera.islive ? (
+                              <Badge
+                                position="absolute"
+                                top={2}
+                                right={2}
+                                fontSize="sm"
+                                colorScheme="green"
+                              >
+                                On
+                              </Badge>
+                            ) : (
+                              <Badge
+                                position="absolute"
+                                right={2}
+                                fontSize="sm"
+                                colorScheme="red"
+                              >
+                                Off
+                              </Badge>
+                            )}
+                          </Box>
+                          {isMobile ? (
+                            <HStack
+                              justifyContent="space-between"
+                              alignItems="center"
+                            >
+                              <Text
+                                fontWeight="bold"
+                                fontSize="small"
+                                width="240px"
+                                p={1}
+                              >
+                                {camera.cameraname}
+                              </Text>
+                            </HStack>
                           ) : (
-                            <OfflineMessage
-                              style={{ height: "160px", visibility: "hidden" }}
-                            />
-                          )}
-                          {camera.islive ? (
-                            <Badge
-                              position="absolute" // Position the badge absolutely within the container
-                              top={2} // Top position from the edge of the container
-                              right={2} // Right position from the edge of the container
-                              fontSize="sm"
-                              colorScheme="green" // You can adjust the color scheme of the badge
+                            <HStack
+                              justifyContent="space-between"
+                              alignItems="center"
                             >
-                              On
-                            </Badge>
+                              <Text
+                                fontWeight="bold"
+                                fontSize="l"
+                                width="240px"
+                                p={1}
+                              >
+                                {camera.cameraname}
+                              </Text>
+                            </HStack>
+                          )}
+                        </div>
+                      </GridItem>
+                    ))
+                : sortedCameraList
+                    .filter((camera) =>
+                      selectedLocation
+                        ? camera.cameraname.startsWith(selectedLocation)
+                        : true
+                    )
+                    .map((camera) => (
+                      <GridItem key={camera.cameraid}>
+                        <div
+                          bg="white"
+                          borderRadius="md"
+                          p={1}
+                          mb={2}
+                          boxShadow="md"
+                          transition="box-shadow 0.3s"
+                          _hover={{ boxShadow: "lg" }}
+                          width={isMobile ? "100%" : "280px"}
+                          maxW={isMobile ? "100%" : "300px"}
+                        >
+                          <Box position="relative">
+                            {camera.islive ? (
+                              <LiveFeed
+                                live={`${getModifiedLiveUrl(camera)}`}
+                                isPlaying={isPlaying}
+                                onPlay={handlePlay}
+                                onPause={handlePause}
+                                handleThumbnailGenerated={
+                                  handleThumbnailGenerated
+                                }
+                                showTimeline={false}
+                                width="280px"
+                                height="160px"
+                                isOn={camera.islive}
+                              />
+                            ) : (
+                              <OfflineMessage
+                                style={{
+                                  height: "160px",
+                                  visibility: "hidden",
+                                }}
+                              />
+                            )}
+                            {camera.islive ? (
+                              <Badge
+                                position="absolute"
+                                top={2}
+                                right={2}
+                                fontSize="sm"
+                                colorScheme="green"
+                              >
+                                On
+                              </Badge>
+                            ) : (
+                              <Badge
+                                position="absolute"
+                                top={2}
+                                right={2}
+                                fontSize="sm"
+                                colorScheme="red"
+                              >
+                                Off
+                              </Badge>
+                            )}
+                          </Box>
+                          {isMobile ? (
+                            <HStack
+                              justifyContent="space-between"
+                              alignItems="center"
+                            >
+                              <Text
+                                fontWeight="bold"
+                                fontSize="small"
+                                width="240px"
+                                p={1}
+                              >
+                                {camera.cameraname}
+                              </Text>
+                            </HStack>
                           ) : (
-                            <Badge
-                              position="absolute" // Position the badge absolutely within the container
-                              top={2} // Top position from the edge of the container
-                              right={2} // Right position from the edge of the container
-                              fontSize="sm"
-                              colorScheme="red" // Set color to red when camera is off
+                            <HStack
+                              justifyContent="space-between"
+                              alignItems="center"
                             >
-                              Off
-                            </Badge>
+                              <Text
+                                fontWeight="bold"
+                                fontSize="l"
+                                width="240px"
+                                p={1}
+                              >
+                                {camera.cameraname}
+                              </Text>
+                            </HStack>
                           )}
-                        </Box>
-                        {isMobile ? (
-                          <HStack
-                            justifyContent="space-between"
-                            alignItems="center"
-                          >
-                            <Text
-                              fontWeight="bold"
-                              fontSize="small"
-                              width="240px"
-                              p={1}
-                            >
-                              {camera.cameraname}
-                            </Text>
-                          </HStack>
-                        ) : (
-                          <HStack
-                            justifyContent="space-between"
-                            alignItems="center"
-                          >
-                            <Text
-                              fontWeight="bold"
-                              fontSize="l"
-                              width="240px"
-                              p={1}
-                            >
-                              {camera.cameraname}
-                            </Text>
-                          </HStack>
-                        )}
-                      </div>
-                    </GridItem>
-                  ))
-                : sortedCameraList.map((camera) => (
-                    <GridItem key={camera.cameraid}>
-                      <div
-                        bg="white"
-                        borderRadius="md"
-                        p={1}
-                        mb={2}
-                        boxShadow="md"
-                        transition="box-shadow 0.3s"
-                        _hover={{ boxShadow: "lg" }}
-                        width={isMobile ? "100%" : "280px"} // Adjust the width for mobile and desktop
-                        maxW={isMobile ? "100%" : "300px"} // Limit the maximum width of the card
-                      >
-                        <Box position="relative">
-                          {/* <Image src="https://via.placeholder.com/240x160" alt="Camera" borderRadius="md" mb={4} /> */}
-                          {camera.islive ? (
-                            <LiveFeed
-                              live={`${getModifiedLiveUrl(camera)}`}
-                              // live={`https://${camera.cameraurl.replace(':1938/', ':443/')}${camera.streamname}/${camera.cameraurl.startsWith('media5') ? `${camera.streamname}.m3u8` : 'index.m3u8'}`}
-                              isPlaying={isPlaying}
-                              onPlay={handlePlay}
-                              onPause={handlePause}
-                              handleThumbnailGenerated={
-                                handleThumbnailGenerated
-                              }
-                              showTimeline={false}
-                              width="280px"
-                              height="160px"
-                              isOn={camera.islive}
-                            />
-                          ) : (
-                            <OfflineMessage
-                              style={{ height: "160px", visibility: "hidden" }}
-                            />
-                          )}
-                          {camera.islive ? (
-                            <Badge
-                              position="absolute" // Position the badge absolutely within the container
-                              top={2} // Top position from the edge of the container
-                              right={2} // Right position from the edge of the container
-                              fontSize="sm"
-                              colorScheme="green" // You can adjust the color scheme of the badge
-                            >
-                              On
-                            </Badge>
-                          ) : (
-                            <Badge
-                              position="absolute" // Position the badge absolutely within the container
-                              top={2} // Top position from the edge of the container
-                              right={2} // Right position from the edge of the container
-                              fontSize="sm"
-                              colorScheme="red" // Set color to red when camera is off
-                            >
-                              Off
-                            </Badge>
-                          )}
-                        </Box>
-                        {isMobile ? (
-                          <HStack
-                            justifyContent="space-between"
-                            alignItems="center"
-                          >
-                            <Text
-                              fontWeight="bold"
-                              fontSize="small"
-                              width="240px"
-                              p={1}
-                            >
-                              {camera.cameraname}
-                            </Text>
-                          </HStack>
-                        ) : (
-                          <HStack
-                            justifyContent="space-between"
-                            alignItems="center"
-                          >
-                            <Text
-                              fontWeight="bold"
-                              fontSize="l"
-                              width="240px"
-                              p={1}
-                            >
-                              {camera.cameraname}
-                            </Text>
-                          </HStack>
-                        )}
-                      </div>
-                    </GridItem>
-                  ))}
+                        </div>
+                      </GridItem>
+                    ))}
+              {(!isMobile ? currentPageData : sortedCameraList).filter(
+                (camera) =>
+                  selectedLocation
+                    ? camera.cameraname.startsWith(selectedLocation)
+                    : true
+              ).length === 0 && (
+                <GridItem colSpan={isMobile ? 1 : gridColumnTemplate.length}>
+                  <Text
+                    textAlign="center"
+                    fontWeight="bold"
+                    fontSize={"lg"}
+                    mt={8}
+                    color="gray.600"
+                  >
+                    No cameras found in {selectedLocation} location
+                  </Text>
+                </GridItem>
+              )}
             </SimpleGrid>
           )}
         </PullToRefresh>
       </Box>
       {!isMobile && (
-        <div className="pagination-container">
+        <div
+          className="pagination-container"
+          style={{
+            position: "fixed",
+            bottom: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+          }}
+        >
           {" "}
-          {/* Add a CSS class for styling */}
           <ReactPaginate
             pageCount={pageCount}
             pageRangeDisplayed={5}
@@ -431,10 +496,25 @@ const CameraFeedsPage = () => {
             containerClassName={"pagination"}
             activeClassName={"active"}
             previousLabel={
-              <span style={{ color: page === 0 ? "gray.100" : "" ,borderColor:page === 0 ? "white" : ""}}>Prev</span>
+              <span
+                style={{
+                  color: page === 0 ? "gray" : "",
+                  borderColor: page === 0 ? "gray" : "",
+                  pointerEvents: page === 0 ? "none" : "auto", // Disable pointer events on first page
+                }}
+                disabled={page === 0}
+              >
+                Prev
+              </span>
             }
             nextLabel={
-              <span style={{ color: page === pageCount - 1 ? "gray.100" : "" ,borderColor:page === 0 ? "white" : ""}}>
+              <span
+                style={{
+                  color: page === pageCount - 1 ? "gray" : "",
+                  pointerEvents: page === pageCount - 1 ? "none" : "auto", // Disable pointer events on last page
+                }}
+                disabled={page === pageCount - 1}
+              >
                 Next
               </span>
             }
